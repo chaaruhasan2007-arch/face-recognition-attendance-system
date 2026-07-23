@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FaceTrack — Student Profile</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#f0f4ff;--surface:#ffffff;--surface2:#f7f9ff;
+  --accent:#4361ee;--accent2:#7209b7;--accent3:#06d6a0;
+  --danger:#ef4444;--warn:#f59e0b;
+  --text:#1a1f3c;--muted:#6b7280;--border:rgba(67,97,238,0.14);
+  --shadow:0 4px 20px rgba(67,97,238,0.09);
+  --glow:0 0 20px rgba(67,97,238,0.35),0 6px 24px rgba(67,97,238,0.15);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{min-height:100vh;background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;cursor:default;}
+#bg-canvas{position:fixed;inset:0;z-index:0;}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 40px;border-bottom:1px solid var(--border);backdrop-filter:blur(20px);background:rgba(240,244,255,0.9);}
+.logo{display:inline-flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:1.05rem;font-weight:700;text-decoration:none;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.logo svg{flex-shrink:0;}
+.logo span{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.back-btn{display:flex;align-items:center;gap:7px;font-size:0.82rem;font-weight:600;color:var(--muted);text-decoration:none;padding:7px 16px;border:1px solid var(--border);border-radius:8px;background:var(--surface);transition:all 0.2s;}
+.back-btn:hover{color:var(--accent);border-color:rgba(67,97,238,0.3);}
+
+.page{position:relative;z-index:10;min-height:100vh;padding:88px 48px 60px;max-width:1100px;margin:0 auto;}
+.breadcrumb{font-size:0.75rem;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.breadcrumb a{color:var(--accent);text-decoration:none;}
+
+/* Profile header */
+.profile-header{display:grid;grid-template-columns:auto 1fr auto;gap:28px;align-items:center;background:var(--surface);border:1.5px solid var(--border);border-radius:18px;padding:28px 32px;box-shadow:var(--shadow);margin-bottom:24px;}
+.student-photo{width:90px;height:90px;border-radius:50%;object-fit:cover;border:3px solid var(--accent);background:var(--surface2);}
+.student-name{font-size:1.6rem;font-weight:800;color:var(--text);letter-spacing:-0.5px;margin-bottom:4px;}
+.student-meta{display:flex;gap:16px;align-items:center;flex-wrap:wrap;}
+.meta-pill{display:flex;align-items:center;gap:6px;font-size:0.78rem;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+.meta-pill svg{color:var(--accent);}
+.profile-actions{display:flex;flex-direction:column;gap:10px;}
+
+/* PCT ring */
+.pct-ring-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;background:var(--surface);border:1.5px solid var(--border);border-radius:18px;padding:24px 28px;box-shadow:var(--shadow);min-width:160px;}
+.pct-ring{position:relative;width:100px;height:100px;}
+.pct-ring svg{transform:rotate(-90deg);}
+.pct-ring-val{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:1.4rem;font-weight:700;}
+.pct-ring-val.high{color:var(--accent3);}
+.pct-ring-val.low{color:var(--danger);}
+.pct-label{font-size:0.72rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);}
+.pct-warn{font-size:0.72rem;color:var(--danger);font-weight:600;text-align:center;}
+
+/* Stats row */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;}
+.stat-box{background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:20px 22px;box-shadow:var(--shadow);text-align:center;}
+.stat-box-val{font-family:'JetBrains Mono',monospace;font-size:1.9rem;font-weight:700;display:block;margin-bottom:4px;}
+.stat-box-val.blue{color:var(--accent);}
+.stat-box-val.green{color:var(--accent3);}
+.stat-box-val.red{color:var(--danger);}
+.stat-box-lbl{font-size:0.7rem;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;}
+
+/* History table */
+.card{background:var(--surface);border:1.5px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);}
+.card-head{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--border);}
+.card-title{font-size:0.9rem;font-weight:700;color:var(--text);}
+table{width:100%;border-collapse:collapse;}
+thead th{padding:12px 18px;font-size:0.68rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);text-align:left;border-bottom:1px solid var(--border);background:var(--surface2);}
+tbody tr{border-bottom:1px solid rgba(67,97,238,0.06);transition:background 0.15s;}
+tbody tr:hover{background:rgba(67,97,238,0.03);}
+tbody tr:last-child{border-bottom:none;}
+tbody td{padding:12px 18px;font-size:0.9rem;}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:100px;font-size:0.68rem;font-weight:700;}
+.badge.present{background:rgba(6,214,160,0.1);color:#047857;border:1px solid rgba(6,214,160,0.3);}
+.badge.absent{background:rgba(239,68,68,0.08);color:#b91c1c;border:1px solid rgba(239,68,68,0.2);}
+.empty-row td{text-align:center;padding:40px;color:var(--muted);font-size:0.88rem;}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;font-family:'Outfit',sans-serif;font-size:0.85rem;font-weight:700;border:none;border-radius:9px;cursor:pointer;transition:all 0.25s cubic-bezier(0.23,1,0.32,1);}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:#3451d1;box-shadow:var(--glow);transform:translateY(-2px);}
+.btn-outline{background:transparent;color:var(--accent);border:1.5px solid rgba(67,97,238,0.3);}
+.btn-outline:hover{background:rgba(67,97,238,0.06);border-color:var(--accent);transform:translateY(-2px);}
+.btn-danger{background:transparent;color:var(--danger);border:1.5px solid rgba(239,68,68,0.3);}
+.btn-danger:hover{background:rgba(239,68,68,0.06);border-color:var(--danger);transform:translateY(-2px);}
+.btn-sm{padding:8px 16px;font-size:0.78rem;}
+
+/* Edit modal */
+.modal-bg{position:fixed;inset:0;background:rgba(26,31,60,0.5);backdrop-filter:blur(4px);z-index:500;display:none;align-items:center;justify-content:center;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--surface);border:1.5px solid var(--border);border-radius:18px;padding:32px;width:420px;max-width:95vw;box-shadow:0 24px 60px rgba(67,97,238,0.2);animation:fadeUp 0.25s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.modal-title{font-size:1.1rem;font-weight:800;margin-bottom:20px;color:var(--text);}
+.form-group{margin-bottom:16px;}
+.form-label{display:block;font-size:0.72rem;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--text);margin-bottom:7px;}
+.form-input{width:100%;padding:11px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-family:'Outfit',sans-serif;font-size:0.9rem;outline:none;transition:border-color 0.2s;}
+.form-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(67,97,238,0.1);}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
+.modal-alert{display:none;padding:10px 14px;border-radius:9px;font-size:0.82rem;font-weight:500;align-items:center;gap:8px;margin-bottom:14px;}
+.modal-alert.show{display:flex;}
+.modal-alert.success{background:rgba(6,214,160,0.1);border:1px solid rgba(6,214,160,0.3);color:#047857;}
+.modal-alert.error{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);color:#b91c1c;}
+
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:rgba(67,97,238,0.2);border-radius:4px;}
+
+.perm-card{margin-top:20px;background:var(--surface);border:1.5px solid var(--border);border-radius:18px;padding:22px 24px;box-shadow:var(--shadow);}
+.perm-head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:10px;}
+.perm-title{font-size:1rem;font-weight:800;color:var(--text);}
+.perm-sub{font-size:0.84rem;color:var(--muted);line-height:1.6;}
+.perm-status{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;font-size:0.8rem;font-weight:700;border:1px solid transparent;}
+.perm-status.allowed{color:#047857;background:rgba(6,214,160,0.1);border-color:rgba(6,214,160,0.28);}
+.perm-status.blocked{color:#b91c1c;background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.22);}
+.perm-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px;}
+
+</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}">
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+
+<nav class="topbar">
+  <a href="/" class="logo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="url(#lg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#4361ee"/><stop offset="100%" stop-color="#7209b7"/></linearGradient></defs><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>Face<span>Track</span></a>
+  <a href="/students" class="back-btn">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+    Registered Students
+  </a>
+</nav>
+
+<div class="page">
+  <div class="breadcrumb">
+    <a href="/">Home</a><span>›</span><a href="/menu">Menu</a><span>›</span>
+    <a href="/students">Registered Students</a><span>›</span>Student Profile
+  </div>
+
+  <!-- Profile header -->
+  <div class="profile-header" id="profile-header">
+    <img id="ph-photo" class="student-photo" src="" alt="Photo"/>
+    <div>
+      <div class="student-name" id="ph-name">Loading…</div>
+      <div class="student-meta">
+        <div class="meta-pill">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3h-8l-2 4h12z"/></svg>
+          <span id="ph-regno">—</span>
+        </div>
+        <div class="meta-pill">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+          Registered: <span id="ph-date">—</span>
+        </div>
+      </div>
+    </div>
+    <div class="pct-ring-wrap">
+      <div class="pct-ring" id="pct-ring">
+        <svg width="100" height="100" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="42" fill="none" stroke="#e8eeff" stroke-width="10"/>
+          <circle id="pct-arc" cx="50" cy="50" r="42" fill="none" stroke="#06d6a0"
+                  stroke-width="10" stroke-linecap="round"
+                  stroke-dasharray="0 264" style="transition:stroke-dasharray 1s ease;"/>
+        </svg>
+        <div class="pct-ring-val high" id="pct-val">—</div>
+      </div>
+      <div class="pct-label">Attendance</div>
+      <div class="pct-warn" id="pct-warn" style="display:none;">⚠️ Below 75%</div>
+    </div>
+  </div>
+
+
+  <!-- Update permission card -->
+  <div class="perm-card">
+    <div class="perm-head">
+      <div>
+        <div class="perm-title">Update Permission</div>
+        <div class="perm-sub">Allow this student to update their email from the student dashboard. You can allow or revoke access anytime.</div>
+      </div>
+      <div id="perm-badge" class="perm-status blocked">Awaiting teacher approval</div>
+    </div>
+    <div class="perm-actions">
+      <button class="btn btn-primary btn-sm" id="allow-btn" onclick="allowUpdate()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+        Allow Updates
+      </button>
+      <button class="btn btn-danger btn-sm" id="revoke-btn" onclick="revokeUpdate()" style="display:none;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        Revoke Permission
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats row -->
+  <div class="stats-row">
+    <div class="stat-box">
+      <span class="stat-box-val blue" id="s-total">—</span>
+      <span class="stat-box-lbl">Total Days</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-box-val green" id="s-present">—</span>
+      <span class="stat-box-lbl">Present</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-box-val red" id="s-absent">—</span>
+      <span class="stat-box-lbl">Absent</span>
+    </div>
+  </div>
+
+  <!-- Attendance history table -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">Attendance History</div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-outline btn-sm" onclick="openEdit()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Edit Name
+        </button>
+        <button class="btn btn-danger btn-sm" onclick="confirmDelete()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6m4-6v6"/></svg>
+          Delete Student
+        </button>
+      </div>
+    </div>
+    <table>
+      <thead>
+        <tr><th>#</th><th>Date</th><th>Status</th><th>Time</th></tr>
+      </thead>
+      <tbody id="hist-tbody">
+        <tr class="empty-row"><td colspan="4">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Edit modal -->
+<div class="modal-bg" id="edit-modal">
+  <div class="modal">
+    <div class="modal-title">Edit Student Name</div>
+    <div class="modal-alert" id="edit-alert"></div>
+    <div class="form-group">
+      <label class="form-label">First Name</label>
+      <input class="form-input" id="edit-first" type="text"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Last Name</label>
+      <input class="form-input" id="edit-last" type="text"/>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeEdit()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── BG Canvas ─────────────────────────────────────────────────────────────
+const bgC=document.getElementById('bg-canvas'),bgX=bgC.getContext('2d');
+let BW,BH,bps=[];
+function brsz(){BW=bgC.width=window.innerWidth;BH=bgC.height=window.innerHeight;}
+window.addEventListener('resize',()=>{brsz();binit();});brsz();
+class BP{constructor(){this.r(true);}r(i=false){this.x=Math.random()*BW;this.y=i?Math.random()*BH:-10;this.vx=(Math.random()-.5)*.28;this.vy=Math.random()*.32+.07;this.rad=Math.random()*2+.5;this.a=Math.random()*.15+.05;this.h=Math.random()>.5?'67,97,238':'114,9,183';}u(){this.x+=this.vx;this.y+=this.vy;if(this.y>BH+10)this.r();}d(){bgX.save();bgX.globalAlpha=this.a;bgX.fillStyle=`rgba(${this.h},1)`;bgX.beginPath();bgX.arc(this.x,this.y,this.rad,0,Math.PI*2);bgX.fill();bgX.restore();}}
+function binit(){bps=[];for(let i=0;i<60;i++)bps.push(new BP());}binit();
+function blog(){bgX.clearRect(0,0,BW,BH);bgX.save();bgX.strokeStyle='rgba(67,97,238,0.03)';bgX.lineWidth=1;for(let x=0;x<BW;x+=60){bgX.beginPath();bgX.moveTo(x,0);bgX.lineTo(x,BH);bgX.stroke();}for(let y=0;y<BH;y+=60){bgX.beginPath();bgX.moveTo(0,y);bgX.lineTo(BW,y);bgX.stroke();}bgX.restore();for(let i=0;i<bps.length;i++)for(let j=i+1;j<bps.length;j++){const dx=bps[i].x-bps[j].x,dy=bps[i].y-bps[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<100){bgX.save();bgX.globalAlpha=(1-d/100)*.06;bgX.strokeStyle='rgba(67,97,238,1)';bgX.lineWidth=.5;bgX.beginPath();bgX.moveTo(bps[i].x,bps[i].y);bgX.lineTo(bps[j].x,bps[j].y);bgX.stroke();bgX.restore();}}bps.forEach(p=>{p.u();p.d();});requestAnimationFrame(blog);}blog();
+
+// ── Load profile ──────────────────────────────────────────────────────────
+
+async function loadPermission() {
+  try {
+    const res = await fetch(`/api/student-data/${regNumber}`);
+    const data = await res.json();
+    if (!data.success) return;
+    const allowed = !!data.can_update;
+    const badge = document.getElementById('perm-badge');
+    const allowBtn = document.getElementById('allow-btn');
+    const revokeBtn = document.getElementById('revoke-btn');
+    badge.textContent = allowed ? 'Allowed to update' : 'Awaiting teacher approval';
+    badge.className = 'perm-status ' + (allowed ? 'allowed' : 'blocked');
+    allowBtn.style.display = allowed ? 'none' : 'inline-flex';
+    revokeBtn.style.display = allowed ? 'inline-flex' : 'none';
+  } catch (e) {
+    console.error('Permission load failed', e);
+  }
+}
+
+async function allowUpdate() {
+  try {
+    const res = await fetch(`/api/student-update-permission/${regNumber}`, {method:'POST'});
+    const data = await res.json();
+    if (data.success) {
+      await loadPermission();
+      alert(data.message || 'Update permission granted.');
+    } else {
+      alert(data.message || 'Failed to grant permission.');
+    }
+  } catch (e) {
+    alert('Server error while granting permission.');
+  }
+}
+
+async function revokeUpdate() {
+  try {
+    const res = await fetch(`/api/student-update-permission/${regNumber}/revoke`, {method:'POST'});
+    const data = await res.json();
+    if (data.success) {
+      await loadPermission();
+      alert(data.message || 'Update permission revoked.');
+    } else {
+      alert(data.message || 'Failed to revoke permission.');
+    }
+  } catch (e) {
+    alert('Server error while revoking permission.');
+  }
+}
+
+
+const regNumber = window.location.pathname.split('/').pop();
+let studentData = null;
+
+async function loadProfile() {
+  const res  = await fetch(`/api/student-data/${regNumber}`);
+  const data = await res.json();
+  if (!data.success) { document.getElementById('ph-name').textContent = 'Student not found'; return; }
+
+  const s = data.student;
+  studentData = s;
+
+  document.getElementById('ph-photo').src = `/api/student_photo/${regNumber}`;
+  document.getElementById('ph-name').textContent  = `${s.first_name} ${s.last_name}`;
+  document.getElementById('ph-regno').textContent = s.reg_number;
+  document.getElementById('ph-date').textContent  = (s.registered_at || '').slice(0,10);
+
+  // Attendance ring — stats come from data.stats, not data.student
+  const stats  = data.stats || {};
+  const pct    = stats.percentage || 0;
+  const arc    = (pct / 100) * (2 * Math.PI * 42);
+  const total  = stats.total || 0;
+  const absent = stats.absent || 0;
+
+  document.getElementById('pct-arc').setAttribute('stroke-dasharray', `${arc} 264`);
+  document.getElementById('pct-arc').setAttribute('stroke', pct >= 75 ? '#06d6a0' : '#ef4444');
+  const valEl = document.getElementById('pct-val');
+  valEl.textContent = `${pct}%`;
+  valEl.className   = `pct-ring-val ${pct >= 75 ? 'high' : 'low'}`;
+  document.getElementById('pct-warn').style.display = pct < 75 && total > 0 ? 'block' : 'none';
+
+  document.getElementById('s-total').textContent   = total;
+  document.getElementById('s-present').textContent = stats.present || 0;
+  document.getElementById('s-absent').textContent  = absent;
+
+  // History table
+  const tbody = document.getElementById('hist-tbody');
+  const records = data.history || data.records || [];
+  if (!records.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="4">No attendance records yet</td></tr>';
+    return;
+  }
+  tbody.innerHTML = records.map((r,i) => `
+    <tr>
+      <td style="color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:0.74rem;">${String(i+1).padStart(2,'0')}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;">${r.date || ''}</td>
+      <td><span class="badge ${(r.status||'').toLowerCase()}">${r.status||''}</span></td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:var(--muted);">${r.time||''}</td>
+    </tr>`).join('');
+}
+loadProfile();
+loadPermission();
+
+// ── Edit modal ────────────────────────────────────────────────────────────
+function openEdit() {
+  document.getElementById('edit-first').value = studentData?.first_name || '';
+  document.getElementById('edit-last').value  = studentData?.last_name  || '';
+  document.getElementById('edit-alert').className = 'modal-alert';
+  document.getElementById('edit-modal').classList.add('open');
+}
+function closeEdit() {
+  document.getElementById('edit-modal').classList.remove('open');
+}
+async function saveEdit() {
+  const first = document.getElementById('edit-first').value.trim();
+  const last  = document.getElementById('edit-last').value.trim();
+  if (!first || !last) { showEditAlert('Name fields required.','error'); return; }
+  try {
+    const res  = await fetch(`/api/student/${regNumber}/update`,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({first_name:first, last_name:last})
+    });
+    const data = await res.json();
+    if (data.success) {
+      showEditAlert('Updated successfully!','success');
+      await loadProfile();
+loadPermission();
+      setTimeout(closeEdit, 1200);
+    } else { showEditAlert(data.message||'Error','error'); }
+  } catch(e){ showEditAlert('Server error.','error'); }
+}
+function showEditAlert(msg,type){
+  const el=document.getElementById('edit-alert');
+  el.className='modal-alert '+type+' show';
+  el.textContent=msg;
+}
+document.getElementById('edit-modal').addEventListener('click',e=>{
+  if(e.target===document.getElementById('edit-modal')) closeEdit();
+});
+
+// ── Delete ────────────────────────────────────────────────────────────────
+async function confirmDelete() {
+  const name = `${studentData?.first_name||''} ${studentData?.last_name||''}`.trim();
+  if (!confirm(`Delete ${name}? This will remove all their attendance records and face data. This cannot be undone.`)) return;
+  try {
+    const res  = await fetch(`/api/student/${regNumber}/delete`,{method:'POST'});
+    const data = await res.json();
+    if (data.success) {
+      alert(data.message);
+      window.location.href = '/students';
+    } else { alert(data.message || 'Delete failed.'); }
+  } catch(e){ alert('Server error.'); }
+}
+</script>
+</body>
+</html>

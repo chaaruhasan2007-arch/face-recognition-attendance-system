@@ -1,0 +1,898 @@
+[
+  {
+    "id": 1,
+    "action": "OVERRIDE",
+    "details": "Manual override: SREE GANESH M (927625BCS156) \u2192 Present on 2026-03-15",
+    "actor": "System",
+    "timestamp": "2026-03-20 19:49:59"
+  },
+  {
+    "id": 2,
+    "action": "ATTENDANCE",
+    "details": "Marked present: DHIVYAN C (927625BCS034)",
+    "actor": "System",
+    "timestamp": "2026-03-21 12:17:41"
+  },
+  {
+    "id": 3,
+    "action": "OVERRIDE",
+    "details": "Manual override: DHIVYAN C (927625BCS034) \u2192 Present on 2026-03-18",
+    "actor": "System",
+    "timestamp": "2026-03-21 12:25:51"
+  },
+  {
+    "id": 4,
+    "action": "OVERRIDE",
+    "details": "Manual override: DHIVYAN C (927625BCS034) \u2192 Present on 2026-03-18",
+    "actor": "System",
+    "timestamp": "2026-03-21 12:25:52"
+  },
+  {
+    "id": 5,
+    "action": "OVERRIDE",
+    "details": "Manual override: DHIVYAN C (927625BCS034) \u2192 Present on 2026-03-15",
+    "actor": "System",
+    "timestamp": "2026-03-21 12:26:12"
+  },
+  {
+    "id": 6,
+    "action": "LOGIN",
+    "details": "Teacher logged in: teacher",
+    "actor": "System",
+    "timestamp": "2026-03-21 12:43:57"
+  },
+  {
+    "id": 7,
+    "action": "LOGIN",
+    "details": "Teacher logged in: teacher",
+    "actor": "System",
+    "timestamp": "2026-03-21 12:50:42"
+  },
+  {
+    "id": 8,
+    "action": "LOGIN",
+    "details": "Teacher logged in: teacher",
+    "actor": "System",
+    "timestamp": "2026-03-21 16:54:53"
+  },
+  {
+    "id": 9,
+    "action": "OVERRIDE",
+    "details": "Manual override: YASWANTHEESWARAN MN (927625BCS189) \u2192 Present on 2026-03-20",
+    "actor": "System",
+    "timestamp": "2026-03-21 16:55:40"
+  },
+  {
+    "id": 10,
+    "action": "OVERRIDE",
+    "details": "Manual override: YASWANTHEESWARAN MN (927625BCS189) \u2192 Present on 2026-03-20",
+    "actor": "System",
+    "timestamp": "2026-03-21 16:55:41"
+  },
+  {
+    "id": 11,
+    "action": "LOGIN",
+    "details": "Teacher logged in: teacher",
+    "actor": "System",
+    "timestamp": "2026-03-21 17:05:27"
+  },
+  {
+    "id": 12,
+    "action": "LOGIN",
+    "details": "Teacher logged in: teacher",
+    "actor": "System",
+    "timestamp": "2026-03-21 17:06:54"
+  },
+  {
+    "id": 13,
+    "action": "LOGIN",
+    "details": "Teacher logged in: teacher",
+    "actor": "System",
+    "timestamp": "2026-03-21 17:23:13"
+  },
+  {
+    "id": 14,
+    "action": "UPDATE",
+    "details": "Teacher reset password for: SREE GANESH M (927625BCS156)",
+    "actor": "System",
+    "timestamp": "2026-03-21 17:23:29"
+  },
+  {
+    "id": 15,
+    "action": "UPDATE",
+    "details": "Student changed password: DHIVYAN C (927625BCS034)",
+    "actor": "System",
+    "timestamp": "2026-03-21 17:24:02"
+  },
+  {
+    "id": 16,
+    "action": "LOGIN",
+    "details": "Teacher logged in: teacher",
+    "actor": "System",
+    "timestamp": "2026-03-21 17:25:02"
+  },
+  {
+    "id": 17,
+    "action": "UPDATE",
+    "details": "Teacher reset password for: DHIVYAN C (927625BCS034)",
+    "actor": "System",
+    "timestamp": "2026-03-21 17:25:09"
+  },
+  {
+    "id": 18,
+    "action": "LOGIN",
+    "details": "Teacher logged in: teacher",
+    "actor": "System",
+    "timestamp": "2026-03-21 17:45:47"
+  },
+  {
+    "id": 19,
+    "action": "LOGIN",
+    "details": "Teacher logged in: teacher",
+    "actor": "System",
+    "timestamp": "2026-03-21 20:51:03"
+  },
+  {
+    "id": 20,
+    "action": "LOGIN",
+    "details": "Teacher logged in: teacher",
+    "actor": "System",
+    "timestamp": "2026-03-21 20:55:23"
+  },
+  {
+    "id": 21,
+    "action": "LOGIN",
+    "details": "Teacher logged in: teacher",
+    "actor": "System",
+    "timestamp": "2026-03-22 15:27:22"
+  },
+  {
+    "id": 22,
+    "action": "ATTENDANCE",
+    "details": "Marked present: DHIVYAN C (927625BCS034)",
+    "actor": "System",
+    "timestamp": "2026-03-22 15:27:46"
+  },
+  {
+    "id": 23,
+    "action": "UPDATE",
+    "details": "Teacher reset password for: SREE GANESH M (927625BCS156)",
+    "actor": "System",
+    "timestamp": "2026-03-22 15:28:23"
+  },
+  {
+    "id": 24,
+    "action": "LOGIN",
+    "details": "Teacher logged in: teacher",
+    "actor": "System",
+    "timestamp": "2026-03-22 15:42:47"
+  },
+  {
+    "id": 25,
+    "action": "LOGIN",
+    "details": "Teacher logged in: teacher",
+    "actor": "System",
+    "timestamp": "2026-03-22 17:17:32"
+  },
+  {
+    "id": 26,
+    "action": "LOGIN",
+    "details": "Teacher logged in: teacher",
+    "actor": "System",
+    "timestamp": "2026-03-22 17:19:18"
+  },
+  {
+    "id": 27,
+    "action": "LOGIN",
+    "details": "Student logged in: DHIVYAN C (927625BCS034)",
+    "actor": "927625BCS034",
+    "timestamp": "2026-03-22 08:55:36 PM"
+  },
+  {
+    "id": 28,
+    "action": "REGISTER",
+    "details": "New student registered: CHAARUHASAN S (927625BCS018)",
+    "actor": "System",
+    "timestamp": "2026-03-23 10:53:02 AM"
+  },
+  {
+    "id": 29,
+    "action": "ATTENDANCE",
+    "details": "Marked present: DHIVYAN C (927625BCS034)",
+    "actor": "System",
+    "timestamp": "2026-03-23 10:53:17 AM"
+  },
+  {
+    "id": 30,
+    "action": "ATTENDANCE",
+    "details": "Marked present: CHAARUHASAN S (927625BCS018)",
+    "actor": "System",
+    "timestamp": "2026-03-23 10:53:17 AM"
+  },
+  {
+    "id": 31,
+    "action": "ATTENDANCE",
+    "details": "Marked present: YASWANTHEESWARAN MN (927625BCS189)",
+    "actor": "System",
+    "timestamp": "2026-03-23 10:53:30 AM"
+  },
+  {
+    "id": 32,
+    "action": "REGISTER",
+    "details": "New student registered: ROKESH VC (927625BCS137)",
+    "actor": "System",
+    "timestamp": "2026-03-23 10:54:11 AM"
+  },
+  {
+    "id": 33,
+    "action": "ATTENDANCE",
+    "details": "Marked present: ROKESH VC (927625BCS137)",
+    "actor": "System",
+    "timestamp": "2026-03-23 10:54:23 AM"
+  },
+  {
+    "id": 34,
+    "action": "LOGIN",
+    "details": "Student logged in: CHAARUHASAN S (927625BCS018)",
+    "actor": "927625BCS018",
+    "timestamp": "2026-03-23 10:55:47 AM"
+  },
+  {
+    "id": 35,
+    "action": "REGISTER",
+    "details": "New student registered: KISSHORE N (927625BCS081)",
+    "actor": "System",
+    "timestamp": "2026-03-23 12:30:33 PM"
+  },
+  {
+    "id": 36,
+    "action": "ATTENDANCE",
+    "details": "Marked present: KISSHORE N (927625BCS081)",
+    "actor": "System",
+    "timestamp": "2026-03-23 12:30:46 PM"
+  },
+  {
+    "id": 37,
+    "action": "OVERRIDE",
+    "details": "Manual override: KISSHORE N (927625BCS081) \u2192 Present on 2026-03-21",
+    "actor": "System",
+    "timestamp": "2026-03-23 12:32:46 PM"
+  },
+  {
+    "id": 38,
+    "action": "OVERRIDE",
+    "details": "Manual override: KISSHORE N (927625BCS081) \u2192 Present on 2026-03-21",
+    "actor": "System",
+    "timestamp": "2026-03-23 12:32:47 PM"
+  },
+  {
+    "id": 39,
+    "action": "LOGIN",
+    "details": "Student logged in: KISSHORE N (927625BCS081)",
+    "actor": "927625BCS081",
+    "timestamp": "2026-03-23 12:33:06 PM"
+  },
+  {
+    "id": 40,
+    "action": "LOGIN",
+    "details": "Student logged in: ROKESH VC (927625BCS137)",
+    "actor": "927625BCS137",
+    "timestamp": "2026-03-23 12:33:22 PM"
+  },
+  {
+    "id": 41,
+    "action": "DELETE",
+    "details": "Student deleted: CHAARUHASAN S (927625BCS018)",
+    "actor": "System",
+    "timestamp": "2026-03-24 05:34:09 AM"
+  },
+  {
+    "id": 42,
+    "action": "DELETE",
+    "details": "Student deleted: DHIVYAN C (927625BCS034)",
+    "actor": "System",
+    "timestamp": "2026-03-24 05:34:15 AM"
+  },
+  {
+    "id": 43,
+    "action": "DELETE",
+    "details": "Student deleted: KISSHORE N (927625BCS081)",
+    "actor": "System",
+    "timestamp": "2026-03-24 05:34:20 AM"
+  },
+  {
+    "id": 44,
+    "action": "DELETE",
+    "details": "Student deleted: ROKESH VC (927625BCS137)",
+    "actor": "System",
+    "timestamp": "2026-03-24 05:34:25 AM"
+  },
+  {
+    "id": 45,
+    "action": "DELETE",
+    "details": "Student deleted: SREE GANESH M (927625BCS156)",
+    "actor": "System",
+    "timestamp": "2026-03-24 05:34:30 AM"
+  },
+  {
+    "id": 46,
+    "action": "DELETE",
+    "details": "Student deleted: YASWANTHEESWARAN MN (927625BCS189)",
+    "actor": "System",
+    "timestamp": "2026-03-24 05:34:34 AM"
+  },
+  {
+    "id": 47,
+    "action": "CLEAR",
+    "details": "All attendance records cleared",
+    "actor": "System",
+    "timestamp": "2026-03-24 05:35:03 AM"
+  },
+  {
+    "id": 48,
+    "action": "REGISTER",
+    "details": "New student registered: CHAARUHASAN S (927625BCS018)",
+    "actor": "System",
+    "timestamp": "2026-03-24 08:37:25 AM"
+  },
+  {
+    "id": 49,
+    "action": "REGISTER",
+    "details": "New student registered: DHIVYAN C (927625BCS034)",
+    "actor": "System",
+    "timestamp": "2026-03-24 08:38:59 AM"
+  },
+  {
+    "id": 50,
+    "action": "ATTENDANCE",
+    "details": "Marked present: CHAARUHASAN S (927625BCS018)",
+    "actor": "System",
+    "timestamp": "2026-03-24 08:39:15 AM"
+  },
+  {
+    "id": 51,
+    "action": "ATTENDANCE",
+    "details": "Marked present: DHIVYAN C (927625BCS034)",
+    "actor": "System",
+    "timestamp": "2026-03-24 08:39:40 AM"
+  },
+  {
+    "id": 52,
+    "action": "REGISTER",
+    "details": "New student registered: SREE GANESH M (927625BCS156)",
+    "actor": "System",
+    "timestamp": "2026-03-24 08:41:26 AM"
+  },
+  {
+    "id": 53,
+    "action": "LOGIN",
+    "details": "Student logged in: SREE GANESH M (927625BCS156)",
+    "actor": "927625BCS156",
+    "timestamp": "2026-03-24 08:45:08 AM"
+  },
+  {
+    "id": 54,
+    "action": "LOGIN",
+    "details": "Student logged in: CHAARUHASAN S (927625BCS018)",
+    "actor": "927625BCS018",
+    "timestamp": "2026-03-24 12:45:59 PM"
+  },
+  {
+    "id": 55,
+    "action": "ATTENDANCE",
+    "details": "Marked present: DHIVYAN C (927625BCS034)",
+    "actor": "System",
+    "timestamp": "2026-03-27 02:24:17 PM"
+  },
+  {
+    "id": 56,
+    "action": "UPDATE",
+    "details": "Teacher reset password for: CHAARUHASAN S (927625BCS018)",
+    "actor": "System",
+    "timestamp": "2026-03-27 02:24:49 PM"
+  },
+  {
+    "id": 57,
+    "action": "LOGIN",
+    "details": "Student logged in: DHIVYAN C (927625BCS034)",
+    "actor": "927625BCS034",
+    "timestamp": "2026-04-04 07:04:58 PM"
+  },
+  {
+    "id": 58,
+    "action": "LOGIN",
+    "details": "Student logged in: DHIVYAN C (927625BCS034)",
+    "actor": "927625BCS034",
+    "timestamp": "2026-04-10 09:01:03 PM"
+  },
+  {
+    "id": 59,
+    "action": "UPDATE",
+    "details": "Holiday declared: 2026-04-11 \u2014 ramzan",
+    "actor": "System",
+    "timestamp": "2026-04-11 07:27:06 PM"
+  },
+  {
+    "id": 60,
+    "action": "UPDATE",
+    "details": "Teacher opened attendance session",
+    "actor": "System",
+    "timestamp": "2026-04-11 07:59:38 PM"
+  },
+  {
+    "id": 61,
+    "action": "UPDATE",
+    "details": "Teacher closed attendance session",
+    "actor": "System",
+    "timestamp": "2026-04-11 08:00:10 PM"
+  },
+  {
+    "id": 62,
+    "action": "LOGIN",
+    "details": "Student logged in: DHIVYAN C (927625BCS034)",
+    "actor": "927625BCS034",
+    "timestamp": "2026-04-12 09:29:36 PM"
+  },
+  {
+    "id": 63,
+    "action": "UPDATE",
+    "details": "Teacher opened attendance session",
+    "actor": "System",
+    "timestamp": "2026-04-13 06:55:22 PM"
+  },
+  {
+    "id": 64,
+    "action": "ATTENDANCE",
+    "details": "Marked present: DHIVYAN C (927625BCS034)",
+    "actor": "System",
+    "timestamp": "2026-04-13 06:55:41 PM"
+  },
+  {
+    "id": 65,
+    "action": "UPDATE",
+    "details": "Teacher closed attendance session",
+    "actor": "System",
+    "timestamp": "2026-04-13 06:56:08 PM"
+  },
+  {
+    "id": 66,
+    "action": "LOGIN",
+    "details": "Student logged in: DHIVYAN C (927625BCS034)",
+    "actor": "927625BCS034",
+    "timestamp": "2026-04-13 06:57:44 PM"
+  },
+  {
+    "id": 67,
+    "action": "LOGIN",
+    "details": "Student logged in: DHIVYAN C (927625BCS034)",
+    "actor": "927625BCS034",
+    "timestamp": "2026-04-18 09:25:59 AM"
+  },
+  {
+    "id": 68,
+    "action": "UPDATE",
+    "details": "Teacher opened attendance session",
+    "actor": "System",
+    "timestamp": "2026-04-18 09:27:09 AM"
+  },
+  {
+    "id": 69,
+    "action": "UPDATE",
+    "details": "Teacher closed attendance session",
+    "actor": "System",
+    "timestamp": "2026-04-18 09:27:24 AM"
+  },
+  {
+    "id": 70,
+    "action": "UPDATE",
+    "details": "Holiday declared: 2026-04-19 \u2014 sunday",
+    "actor": "System",
+    "timestamp": "2026-04-19 08:09:33 AM"
+  },
+  {
+    "id": 71,
+    "action": "OVERRIDE",
+    "details": "Manual override: SREE GANESH M (927625BCS156) \u2192 Present on 2026-03-24",
+    "actor": "System",
+    "timestamp": "2026-04-19 08:10:20 AM"
+  },
+  {
+    "id": 72,
+    "action": "LOGIN",
+    "details": "Student logged in: DHIVYAN C (927625BCS034)",
+    "actor": "927625BCS034",
+    "timestamp": "2026-04-19 08:16:49 AM"
+  },
+  {
+    "id": 73,
+    "action": "UPDATE",
+    "details": "Teacher opened attendance session",
+    "actor": "System",
+    "timestamp": "2026-04-19 07:38:19 PM"
+  },
+  {
+    "id": 74,
+    "action": "UPDATE",
+    "details": "Teacher closed attendance session",
+    "actor": "System",
+    "timestamp": "2026-04-19 08:00:54 PM"
+  },
+  {
+    "id": 75,
+    "action": "UPDATE",
+    "details": "Teacher opened attendance session",
+    "actor": "System",
+    "timestamp": "2026-04-19 08:00:56 PM"
+  },
+  {
+    "id": 76,
+    "action": "UPDATE",
+    "details": "Teacher closed attendance session",
+    "actor": "System",
+    "timestamp": "2026-04-19 08:00:57 PM"
+  },
+  {
+    "id": 77,
+    "action": "LOGIN",
+    "details": "Student logged in: DHIVYAN C (927625BCS034)",
+    "actor": "927625BCS034",
+    "timestamp": "2026-04-20 07:15:36 PM"
+  },
+  {
+    "id": 78,
+    "action": "ATTENDANCE",
+    "details": "Auto-marked 3 student(s) absent for 2026-04-20",
+    "actor": "System",
+    "timestamp": "2026-04-20 08:23:11 PM"
+  },
+  {
+    "id": 79,
+    "action": "OVERRIDE",
+    "details": "Manual override: CHAARUHASAN S (927625BCS018) \u2192 Present on 2026-04-20",
+    "actor": "System",
+    "timestamp": "2026-04-20 08:23:21 PM"
+  },
+  {
+    "id": 80,
+    "action": "OVERRIDE",
+    "details": "Manual override: DHIVYAN C (927625BCS034) \u2192 Present on 2026-04-20",
+    "actor": "System",
+    "timestamp": "2026-04-20 08:23:27 PM"
+  },
+  {
+    "id": 81,
+    "action": "OVERRIDE",
+    "details": "Manual override: SREE GANESH M (927625BCS156) \u2192 Absent on 2026-04-20",
+    "actor": "System",
+    "timestamp": "2026-04-20 08:23:32 PM"
+  },
+  {
+    "id": 82,
+    "action": "OVERRIDE",
+    "details": "Manual override: SREE GANESH M (927625BCS156) \u2192 Present on 2026-04-20",
+    "actor": "System",
+    "timestamp": "2026-04-20 08:23:37 PM"
+  },
+  {
+    "id": 83,
+    "action": "UPDATE",
+    "details": "Teacher opened attendance session",
+    "actor": "System",
+    "timestamp": "2026-04-22 07:41:50 PM"
+  },
+  {
+    "id": 84,
+    "action": "UPDATE",
+    "details": "Student 927625BCS018 permission granted to update profile",
+    "actor": "System",
+    "timestamp": "2026-04-22 08:33:18 PM"
+  },
+  {
+    "id": 85,
+    "action": "UPDATE",
+    "details": "Student 927625BCS018 update permission revoked",
+    "actor": "System",
+    "timestamp": "2026-04-22 08:34:02 PM"
+  },
+  {
+    "id": 86,
+    "action": "UPDATE",
+    "details": "Student 927625BCS018 permission granted to update profile",
+    "actor": "System",
+    "timestamp": "2026-04-22 08:51:15 PM"
+  },
+  {
+    "id": 87,
+    "action": "UPDATE",
+    "details": "Student 927625BCS018 update permission revoked",
+    "actor": "System",
+    "timestamp": "2026-04-22 08:51:19 PM"
+  },
+  {
+    "id": 88,
+    "action": "UPDATE",
+    "details": "Student 927625BCS018 permission granted to update profile",
+    "actor": "System",
+    "timestamp": "2026-04-23 11:14:33 AM"
+  },
+  {
+    "id": 89,
+    "action": "UPDATE",
+    "details": "Student 927625BCS018 updated their email to Not set",
+    "actor": "System",
+    "timestamp": "2026-04-23 11:14:54 AM"
+  },
+  {
+    "id": 90,
+    "action": "UPDATE",
+    "details": "Teacher closed attendance session",
+    "actor": "System",
+    "timestamp": "2026-04-26 07:50:53 AM"
+  },
+  {
+    "id": 91,
+    "action": "EMAIL",
+    "details": "Manual email alert: threshold 75%, matched 2, sent 0, failed 1, skipped 1",
+    "actor": "Teacher",
+    "timestamp": "2026-04-26 08:17:33 AM"
+  },
+  {
+    "id": 92,
+    "action": "UPDATE",
+    "details": "Student 927625BCS018 updated their email to dhivi1208@gmail.com",
+    "actor": "System",
+    "timestamp": "2026-04-26 08:18:25 AM"
+  },
+  {
+    "id": 93,
+    "action": "UPDATE",
+    "details": "Student 927625BCS018 updated their email to dhivi1208@gmail.com",
+    "actor": "System",
+    "timestamp": "2026-04-26 08:18:26 AM"
+  },
+  {
+    "id": 94,
+    "action": "UPDATE",
+    "details": "Student 927625BCS018 updated their email to Chaaruhasan2007@gmail.com",
+    "actor": "System",
+    "timestamp": "2026-04-26 08:19:16 AM"
+  },
+  {
+    "id": 95,
+    "action": "UPDATE",
+    "details": "Student 927625BCS018 updated their email to Chaaruhasan2007@gmail.com",
+    "actor": "System",
+    "timestamp": "2026-04-26 08:19:17 AM"
+  },
+  {
+    "id": 96,
+    "action": "EMAIL",
+    "details": "Manual email alert: threshold 75%, matched 2, sent 0, failed 1, skipped 1",
+    "actor": "Teacher",
+    "timestamp": "2026-04-26 08:19:43 AM"
+  },
+  {
+    "id": 97,
+    "action": "UPDATE",
+    "details": "Student 927625BCS156 permission granted to update profile",
+    "actor": "System",
+    "timestamp": "2026-04-26 08:20:06 AM"
+  },
+  {
+    "id": 98,
+    "action": "UPDATE",
+    "details": "Student 927625BCS018 update permission revoked",
+    "actor": "System",
+    "timestamp": "2026-04-26 08:20:12 AM"
+  },
+  {
+    "id": 99,
+    "action": "UPDATE",
+    "details": "Student 927625BCS156 updated their email to dhivi1208@gmail.com",
+    "actor": "System",
+    "timestamp": "2026-04-26 08:20:47 AM"
+  },
+  {
+    "id": 100,
+    "action": "UPDATE",
+    "details": "Student 927625BCS156 updated their email to dhivi1208@gmail.com",
+    "actor": "System",
+    "timestamp": "2026-04-26 08:20:48 AM"
+  },
+  {
+    "id": 101,
+    "action": "EMAIL",
+    "details": "Manual email alert: threshold 75%, matched 2, sent 0, failed 2, skipped 0",
+    "actor": "Teacher",
+    "timestamp": "2026-04-26 08:21:15 AM"
+  },
+  {
+    "id": 102,
+    "action": "EMAIL",
+    "details": "Manual email alert: threshold 75%, matched 2, sent 0, failed 2, skipped 0",
+    "actor": "Teacher",
+    "timestamp": "2026-04-26 10:29:00 AM"
+  },
+  {
+    "id": 103,
+    "action": "UPDATE",
+    "details": "Student 927625BCS018 permission granted to update profile",
+    "actor": "System",
+    "timestamp": "2026-04-26 10:29:42 AM"
+  },
+  {
+    "id": 104,
+    "action": "UPDATE",
+    "details": "Student 927625BCS018 update permission revoked",
+    "actor": "System",
+    "timestamp": "2026-04-26 10:29:45 AM"
+  },
+  {
+    "id": 105,
+    "action": "EMAIL",
+    "details": "Manual email alert: threshold 75%, matched 2, sent 0, failed 2, skipped 0",
+    "actor": "Teacher",
+    "timestamp": "2026-04-26 10:34:30 AM"
+  },
+  {
+    "id": 106,
+    "action": "EMAIL",
+    "details": "Manual email alert: threshold 75%, matched 2, sent 2, failed 0, skipped 0",
+    "actor": "Teacher",
+    "timestamp": "2026-04-26 10:36:05 AM"
+  },
+  {
+    "id": 107,
+    "action": "UPDATE",
+    "details": "Student 927625BCS156 updated their email to sreemaha232008@gmail.com",
+    "actor": "System",
+    "timestamp": "2026-04-26 11:17:41 AM"
+  },
+  {
+    "id": 108,
+    "action": "UPDATE",
+    "details": "Student 927625BCS156 updated their email to sreemaha232008@gmail.com",
+    "actor": "System",
+    "timestamp": "2026-04-26 11:17:42 AM"
+  },
+  {
+    "id": 109,
+    "action": "EMAIL",
+    "details": "Manual email alert: threshold 75%, matched 2, sent 2, failed 0, skipped 0",
+    "actor": "Teacher",
+    "timestamp": "2026-04-26 11:18:10 AM"
+  },
+  {
+    "id": 110,
+    "action": "EMAIL",
+    "details": "Manual email alert: threshold 75%, matched 2, sent 2, failed 0, skipped 0",
+    "actor": "Teacher",
+    "timestamp": "2026-04-27 08:23:41 AM"
+  },
+  {
+    "id": 111,
+    "action": "EMAIL",
+    "details": "Manual email alert: threshold 75%, matched 2, sent 2, failed 0, skipped 0",
+    "actor": "Teacher",
+    "timestamp": "2026-04-28 04:36:33 PM"
+  },
+  {
+    "id": 112,
+    "action": "UPDATE",
+    "details": "Teacher opened attendance session",
+    "actor": "System",
+    "timestamp": "2026-05-10 06:04:02 PM"
+  },
+  {
+    "id": 113,
+    "action": "ATTENDANCE",
+    "details": "DHIVYAN C marked present at 06:22 PM",
+    "actor": "System",
+    "timestamp": "2026-05-10 06:22:09 PM"
+  },
+  {
+    "id": 114,
+    "action": "ATTENDANCE",
+    "details": "DHIVYAN C marked present at 06:28 AM",
+    "actor": "System",
+    "timestamp": "2026-05-18 06:28:04 AM"
+  },
+  {
+    "id": 115,
+    "action": "ATTENDANCE",
+    "details": "DHIVYAN C marked present at 07:13 PM",
+    "actor": "System",
+    "timestamp": "2026-05-31 07:14:00 PM"
+  },
+  {
+    "id": 116,
+    "action": "ATTENDANCE",
+    "details": "DHIVYAN C marked present at 08:35 AM",
+    "actor": "System",
+    "timestamp": "2026-06-01 08:35:24 AM"
+  },
+  {
+    "id": 117,
+    "action": "ATTENDANCE",
+    "details": "DHIVYAN C marked present at 05:06 PM",
+    "actor": "System",
+    "timestamp": "2026-06-03 05:06:04 PM"
+  },
+  {
+    "id": 118,
+    "action": "EMAIL",
+    "details": "Manual email alert: threshold 75%, matched 2, sent 2, failed 0, skipped 0",
+    "actor": "Teacher",
+    "timestamp": "2026-06-03 05:29:17 PM"
+  },
+  {
+    "id": 119,
+    "action": "UPDATE",
+    "details": "Teacher closed attendance session",
+    "actor": "System",
+    "timestamp": "2026-06-04 06:19:17 AM"
+  },
+  {
+    "id": 120,
+    "action": "UPDATE",
+    "details": "Teacher opened attendance session",
+    "actor": "System",
+    "timestamp": "2026-06-04 06:36:11 AM"
+  },
+  {
+    "id": 121,
+    "action": "ATTENDANCE",
+    "details": "DHIVYAN C marked present at 06:36 AM",
+    "actor": "System",
+    "timestamp": "2026-06-04 06:36:35 AM"
+  },
+  {
+    "id": 122,
+    "action": "UPDATE",
+    "details": "Teacher closed attendance session",
+    "actor": "System",
+    "timestamp": "2026-06-04 12:28:01 PM"
+  },
+  {
+    "id": 123,
+    "action": "UPDATE",
+    "details": "Teacher opened attendance session",
+    "actor": "System",
+    "timestamp": "2026-06-04 12:28:09 PM"
+  },
+  {
+    "id": 124,
+    "action": "ATTENDANCE",
+    "details": "CHAARUHASAN S marked present at 12:29 PM",
+    "actor": "System",
+    "timestamp": "2026-06-04 12:29:32 PM"
+  },
+  {
+    "id": 125,
+    "action": "ATTENDANCE",
+    "details": "DHIVYAN C marked present at 04:53 PM",
+    "actor": "System",
+    "timestamp": "2026-06-18 04:53:27 PM"
+  },
+  {
+    "id": 126,
+    "action": "ATTENDANCE",
+    "details": "DHIVYAN C marked present at 04:38 PM",
+    "actor": "System",
+    "timestamp": "2026-06-23 04:38:49 PM"
+  },
+  {
+    "id": 127,
+    "action": "ATTENDANCE",
+    "details": "DHIVYAN C marked present at 09:31 AM",
+    "actor": "System",
+    "timestamp": "2026-06-27 09:31:03 AM"
+  },
+  {
+    "id": 128,
+    "action": "ATTENDANCE",
+    "details": "DHIVYAN C marked present at 07:06 PM",
+    "actor": "System",
+    "timestamp": "2026-07-11 07:06:31 PM"
+  }
+]

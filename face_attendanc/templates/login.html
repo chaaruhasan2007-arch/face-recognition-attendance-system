@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FaceTrack — Choose Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#f0f4ff;--surface:#fff;--accent:#4361ee;--accent2:#7209b7;--accent3:#06d6a0;--text:#1a1f3c;--muted:#6b7280;--border:rgba(67,97,238,0.14);--shadow:0 4px 24px rgba(67,97,238,0.1);--glow:0 0 24px rgba(67,97,238,0.35),0 8px 32px rgba(67,97,238,0.15);}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{min-height:100vh;background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;cursor:default;}
+#bg-canvas{position:fixed;inset:0;z-index:0;}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:16px 48px;border-bottom:1px solid var(--border);backdrop-filter:blur(20px);background:rgba(240,244,255,0.9);}
+.logo{display:inline-flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:1.05rem;font-weight:700;text-decoration:none;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.logo svg{flex-shrink:0;}
+.logo span{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.back-link{display:flex;align-items:center;gap:7px;font-size:0.82rem;font-weight:600;color:var(--muted);text-decoration:none;padding:7px 16px;border:1px solid var(--border);border-radius:8px;background:var(--surface);transition:all 0.2s;}
+.back-link:hover{color:var(--accent);border-color:rgba(67,97,238,0.3);}
+
+.page{position:relative;z-index:10;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:100px 24px 60px;text-align:center;}
+.page-tag{font-family:'JetBrains Mono',monospace;font-size:0.7rem;letter-spacing:3px;color:var(--accent);margin-bottom:14px;background:rgba(67,97,238,0.08);border:1px solid rgba(67,97,238,0.2);padding:7px 18px;border-radius:100px;display:inline-block;animation:fadeUp 0.6s ease both;}
+.page-title{font-size:clamp(2rem,4vw,2.8rem);font-weight:800;color:var(--text);letter-spacing:-1px;margin-bottom:10px;animation:fadeUp 0.7s ease 0.1s both;}
+.page-sub{font-size:0.95rem;color:var(--muted);margin-bottom:52px;animation:fadeUp 0.7s ease 0.2s both;}
+
+/* Role cards */
+.roles{display:flex;gap:28px;justify-content:center;flex-wrap:wrap;animation:fadeUp 0.7s ease 0.3s both;}
+.role-card{background:var(--surface);border:1.5px solid var(--border);border-radius:22px;padding:44px 40px 36px;width:280px;cursor:pointer;text-decoration:none;color:var(--text);box-shadow:var(--shadow);transition:all 0.3s cubic-bezier(0.23,1,0.32,1);position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;text-align:center;}
+.role-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;border-radius:22px 22px 0 0;opacity:0.7;transition:opacity 0.3s;}
+.role-card.teacher::before{background:linear-gradient(90deg,var(--accent),#6483ff);}
+.role-card.student::before{background:linear-gradient(90deg,var(--accent3),#00e8b5);}
+.role-card:hover{transform:translateY(-8px);box-shadow:0 20px 52px rgba(67,97,238,0.18);}
+.role-card:hover::before{opacity:1;}
+
+.role-icon{width:80px;height:80px;border-radius:20px;display:flex;align-items:center;justify-content:center;margin-bottom:24px;font-size:2.2rem;}
+.role-card.teacher .role-icon{background:rgba(67,97,238,0.1);}
+.role-card.student .role-icon{background:rgba(6,214,160,0.1);}
+
+.role-title{font-size:1.3rem;font-weight:800;margin-bottom:8px;}
+.role-card.teacher .role-title{color:var(--accent);}
+.role-card.student .role-title{color:var(--accent3);}
+
+.role-desc{font-size:0.85rem;color:var(--muted);line-height:1.65;margin-bottom:28px;flex:1;}
+
+.role-btn{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:10px;font-family:'Outfit',sans-serif;font-size:0.88rem;font-weight:700;border:none;cursor:pointer;transition:all 0.25s;text-decoration:none;color:#fff;width:100%;justify-content:center;}
+.role-card.teacher .role-btn{background:var(--accent);}
+.role-card.teacher .role-btn:hover{background:#3451d1;box-shadow:0 0 20px rgba(67,97,238,0.4);}
+.role-card.student .role-btn{background:var(--accent3);}
+.role-card.student .role-btn:hover{background:#00b890;box-shadow:0 0 20px rgba(6,214,160,0.4);}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px);}to{opacity:1;transform:translateY(0);}}
+</style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<nav class="topbar">
+  <div class="logo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="url(#lg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#4361ee"/><stop offset="100%" stop-color="#7209b7"/></linearGradient></defs><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>Face<span>Track</span></div>
+  <a href="/" class="back-link">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+    Back
+  </a>
+</nav>
+
+<div class="page">
+  <div class="page-tag">◈ SECURE ACCESS</div>
+  <h1 class="page-title">Who are you?</h1>
+  <p class="page-sub">Select your role to continue to the appropriate portal</p>
+
+  <div class="roles">
+    <a href="/teacher-login" class="role-card teacher">
+      <div class="role-icon">👨‍🏫</div>
+      <div class="role-title">Teacher</div>
+      <div class="role-desc">Access the full dashboard — register students, take attendance, view reports, and manage the system.</div>
+      <span class="role-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Teacher Login
+      </span>
+    </a>
+
+    <a href="/student-login" class="role-card student">
+      <div class="role-icon">🎓</div>
+      <div class="role-title">Student</div>
+      <div class="role-desc">View your personal attendance record, percentage, present and absent days with detailed history.</div>
+      <span class="role-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Student Login
+      </span>
+    </a>
+  </div>
+</div>
+
+<script>
+const cv=document.getElementById('bg-canvas'),cx=cv.getContext('2d');
+let W,H,ps=[];
+function rsz(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}
+window.addEventListener('resize',()=>{rsz();init();});rsz();
+class P{constructor(){this.r(true);}r(i=false){this.x=Math.random()*W;this.y=i?Math.random()*H:-10;this.vx=(Math.random()-.5)*.3;this.vy=Math.random()*.35+.08;this.rad=Math.random()*2+.6;this.a=Math.random()*.18+.06;this.h=Math.random()>.5?'67,97,238':'114,9,183';}u(){this.x+=this.vx;this.y+=this.vy;if(this.y>H+10)this.r();}d(){cx.save();cx.globalAlpha=this.a;cx.fillStyle=`rgba(${this.h},1)`;cx.beginPath();cx.arc(this.x,this.y,this.rad,0,Math.PI*2);cx.fill();cx.restore();}}
+function init(){ps=[];for(let i=0;i<80;i++)ps.push(new P());}init();
+function loop(){cx.clearRect(0,0,W,H);cx.save();cx.strokeStyle='rgba(67,97,238,0.035)';cx.lineWidth=1;for(let x=0;x<W;x+=60){cx.beginPath();cx.moveTo(x,0);cx.lineTo(x,H);cx.stroke();}for(let y=0;y<H;y+=60){cx.beginPath();cx.moveTo(0,y);cx.lineTo(W,y);cx.stroke();}cx.restore();for(let i=0;i<ps.length;i++)for(let j=i+1;j<ps.length;j++){const dx=ps[i].x-ps[j].x,dy=ps[i].y-ps[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<110){cx.save();cx.globalAlpha=(1-d/110)*.07;cx.strokeStyle='rgba(67,97,238,1)';cx.lineWidth=.5;cx.beginPath();cx.moveTo(ps[i].x,ps[i].y);cx.lineTo(ps[j].x,ps[j].y);cx.stroke();cx.restore();}}ps.forEach(p=>{p.u();p.d();});requestAnimationFrame(loop);}loop();
+</script>
+</body>
+</html>

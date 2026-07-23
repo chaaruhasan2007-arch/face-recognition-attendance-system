@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FaceTrack — Menu</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#f0f4ff; --surface:#ffffff; --surface2:#f7f9ff;
+  --accent:#4361ee; --accent2:#7209b7; --accent3:#06d6a0;
+  --danger:#ef4444;
+  --text:#1a1f3c; --muted:#6b7280; --border:rgba(67,97,238,0.14);
+  --shadow:0 4px 24px rgba(67,97,238,0.1);
+  --shadow-hover:0 16px 48px rgba(67,97,238,0.2);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{min-height:100vh;background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;cursor:default;}
+#bg-canvas{position:fixed;inset:0;z-index:0;}
+
+/* TOPBAR */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:16px 48px;border-bottom:1px solid var(--border);backdrop-filter:blur(20px);background:rgba(240,244,255,0.9);}
+.logo{display:inline-flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:1.05rem;font-weight:700;text-decoration:none;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.logo svg{flex-shrink:0;}
+.logo span{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.topbar-right{display:flex;align-items:center;gap:16px;}
+.back-btn{display:flex;align-items:center;gap:7px;font-size:0.82rem;font-weight:600;color:var(--muted);text-decoration:none;padding:7px 16px;border:1px solid var(--border);border-radius:8px;background:var(--surface);transition:all 0.2s;}
+.back-btn:hover{color:var(--accent);border-color:rgba(67,97,238,0.3);}
+.sys-pill{display:flex;align-items:center;gap:7px;font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--accent3);background:rgba(6,214,160,0.08);border:1px solid rgba(6,214,160,0.25);padding:6px 14px;border-radius:100px;}
+.s-dot{width:6px;height:6px;background:var(--accent3);border-radius:50%;animation:pulse 1.8s infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(6,214,160,0.5);}50%{box-shadow:0 0 0 5px rgba(6,214,160,0);}}
+
+/* PAGE */
+.page{position:relative;z-index:10;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:120px 40px 60px;}
+.page-header{text-align:center;margin-bottom:56px;}
+.page-tag{font-family:'JetBrains Mono',monospace;font-size:0.7rem;letter-spacing:3px;color:var(--accent);margin-bottom:14px;display:block;}
+.page-title{font-size:clamp(2rem,4vw,2.8rem);font-weight:800;color:var(--text);letter-spacing:-1px;margin-bottom:10px;}
+.page-sub{font-size:0.95rem;color:var(--muted);}
+
+/* CARDS GRID */
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;max-width:900px;width:100%;}
+
+.menu-card{background:var(--surface);border:1.5px solid var(--border);border-radius:20px;padding:40px 32px 36px;text-decoration:none;color:var(--text);box-shadow:var(--shadow);transition:all 0.32s cubic-bezier(0.23,1,0.32,1);position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:flex-start;gap:0;}
+.menu-card::after{content:'';position:absolute;inset:0;border-radius:20px;opacity:0;transition:opacity 0.32s;}
+.menu-card.card-1::after{background:linear-gradient(135deg,rgba(67,97,238,0.04),rgba(67,97,238,0.08));}
+.menu-card.card-2::after{background:linear-gradient(135deg,rgba(114,9,183,0.04),rgba(114,9,183,0.08));}
+.menu-card.card-3::after{background:linear-gradient(135deg,rgba(6,214,160,0.04),rgba(6,214,160,0.08));}
+.menu-card:hover{transform:translateY(-8px);box-shadow:var(--shadow-hover);}
+.menu-card:hover::after{opacity:1;}
+
+/* top accent bar */
+.menu-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;border-radius:20px 20px 0 0;transition:opacity 0.3s;opacity:0.7;}
+.card-1::before{background:linear-gradient(90deg,var(--accent),#6483ff);}
+.card-2::before{background:linear-gradient(90deg,var(--accent2),#b44dff);}
+.card-3::before{background:linear-gradient(90deg,var(--accent3),#00e8b5);}
+.card-4::before{background:linear-gradient(90deg,#f59e0b,#f97316);}
+.menu-card.card-4::after{background:linear-gradient(135deg,rgba(245,158,11,0.04),rgba(245,158,11,0.08));}
+.card-4 .card-icon-wrap{background:rgba(245,158,11,0.1);}
+.card-4 .card-title{color:#d97706;}
+.card-4 .card-btn{background:#d97706;color:#fff;}
+.card-4 .card-btn:hover{background:#b45309;box-shadow:0 0 20px rgba(217,119,6,0.4);transform:translateY(-2px);}
+.card-5{display:flex;flex-direction:column;align-items:flex-start;}
+.card-5::before{background:linear-gradient(90deg,#6366f1,#8b5cf6);}
+.menu-card.card-5::after{background:linear-gradient(135deg,rgba(99,102,241,0.04),rgba(139,92,246,0.08));}
+.card-5 .card-icon-wrap{background:rgba(99,102,241,0.1);}
+.card-5 .card-title{color:#4f46e5;}
+.card-5 .card-btn{background:#4f46e5;color:#fff;}
+.card-5 .card-btn:hover{background:#4338ca;box-shadow:0 0 20px rgba(79,70,229,0.4);transform:translateY(-2px);}
+.menu-card:hover::before{opacity:1;}
+
+.card-icon-wrap{width:64px;height:64px;border-radius:16px;display:flex;align-items:center;justify-content:center;margin-bottom:24px;position:relative;z-index:1;}
+.card-1 .card-icon-wrap{background:rgba(67,97,238,0.1);}
+.card-2 .card-icon-wrap{background:rgba(114,9,183,0.1);}
+.card-3 .card-icon-wrap{background:rgba(6,214,160,0.1);}
+
+.card-title{font-size:1.2rem;font-weight:800;margin-bottom:10px;position:relative;z-index:1;}
+.card-1 .card-title{color:var(--accent);}
+.card-2 .card-title{color:var(--accent2);}
+.card-3 .card-title{color:var(--accent3);}
+
+.card-desc{font-size:0.85rem;color:var(--muted);line-height:1.65;flex:1;position:relative;z-index:1;margin-bottom:28px;}
+
+.card-btn{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:10px;font-family:'Outfit',sans-serif;font-size:0.85rem;font-weight:700;border:none;cursor:pointer;position:relative;z-index:1;transition:all 0.25s cubic-bezier(0.23,1,0.32,1);text-decoration:none;}
+.card-1 .card-btn{background:var(--accent);color:#fff;}
+.card-1 .card-btn:hover{background:#3451d1;box-shadow:0 0 20px rgba(67,97,238,0.4);transform:translateY(-2px);}
+.card-2 .card-btn{background:var(--accent2);color:#fff;}
+.card-2 .card-btn:hover{background:#5c00a0;box-shadow:0 0 20px rgba(114,9,183,0.4);transform:translateY(-2px);}
+.card-3 .card-btn{background:var(--accent3);color:#fff;}
+.card-3 .card-btn:hover{background:#00b890;box-shadow:0 0 20px rgba(6,214,160,0.4);transform:translateY(-2px);}
+.card-btn svg{flex-shrink:0;transition:transform 0.25s;}
+.card-btn:hover svg{transform:translateX(3px);}
+
+/* STATS BAR */
+.stats-bar{display:flex;gap:0;margin-top:52px;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:var(--surface);box-shadow:var(--shadow);}
+.sb-item{padding:28px 52px;text-align:center;border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;gap:0;}
+.sb-item:last-child{border-right:none;}
+.sb-n{font-family:'JetBrains Mono',monospace;font-size:2rem;font-weight:700;display:block;margin-bottom:8px;line-height:1;text-decoration:none;}
+.sb-n.a{color:var(--accent);}
+.sb-n.b{color:var(--accent2);}
+.sb-n.c{color:var(--accent3);}
+.sb-l{font-size:0.65rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;display:block;}
+
+.sb-accent,.stat-accent{display:none !important;}
+/* Session toggle */
+.session-bar{display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:16px 24px;box-shadow:var(--shadow);margin-bottom:32px;max-width:900px;width:100%;}
+.session-info{display:flex;align-items:center;gap:12px;}
+.session-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.session-dot.on{background:#06d6a0;animation:pulse 1.8s infinite;}
+.session-dot.off{background:#ef4444;}
+.session-label{font-size:0.9rem;font-weight:700;color:var(--text);}
+.session-sub{font-size:0.78rem;color:var(--muted);}
+.toggle-wrap{display:flex;align-items:center;gap:12px;}
+.toggle-track{position:relative;width:52px;height:28px;border-radius:14px;background:#e5e7eb;cursor:pointer;transition:background 0.3s;border:none;outline:none;}
+.toggle-track.on{background:var(--accent3);}
+.toggle-thumb{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform 0.3s;box-shadow:0 1px 4px rgba(0,0,0,0.15);}
+.toggle-track.on .toggle-thumb{transform:translateX(24px);}
+.toggle-lbl{font-family:'JetBrains Mono',monospace;font-size:0.72rem;font-weight:700;letter-spacing:1px;}
+.toggle-lbl.on{color:var(--accent3);}
+.toggle-lbl.off{color:#ef4444;}
+/* TICKER */
+
+</style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+
+<nav class="topbar">
+  <a href="/" class="logo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="url(#lg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#4361ee"/><stop offset="100%" stop-color="#7209b7"/></linearGradient></defs><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>Face<span>Track</span></a>
+  <div class="topbar-right">
+    <div class="sys-pill"><div class="s-dot"></div>TEACHER</div>
+    <a href="/logout" style="display:flex;align-items:center;gap:7px;font-size:0.82rem;font-weight:600;color:#ef4444;text-decoration:none;padding:7px 16px;border:1px solid rgba(239,68,68,0.3);border-radius:8px;background:#fff;transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.06)'" onmouseout="this.style.background='#fff'">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Logout
+    </a>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="page-header">
+    <span class="page-tag">DASHBOARD</span>
+    <h1 class="page-title">What would you like to do?</h1>
+    <p class="page-sub">Choose an option below to get started</p>
+  </div>
+
+  <!-- Session control bar -->
+  <div class="session-bar" id="session-bar">
+    <div class="session-info">
+      <div class="session-dot off" id="sess-dot"></div>
+      <div>
+        <div class="session-label" id="sess-label">Attendance session closed</div>
+        <div class="session-sub" id="sess-sub">Students cannot take attendance right now</div>
+      </div>
+    </div>
+    <div class="toggle-wrap">
+      <span class="toggle-lbl off" id="toggle-lbl">OFF</span>
+      <button class="toggle-track" id="session-toggle" onclick="toggleSession()">
+        <div class="toggle-thumb"></div>
+      </button>
+    </div>
+  </div>
+
+  <div class="cards">
+    <!-- Register -->
+    <div class="menu-card card-1">
+      <div class="card-icon-wrap">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#4361ee" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+      </div>
+      <div class="card-title">Register Face</div>
+      <div class="card-desc">Enroll a new student by entering their details and capturing their face using the webcam. Duplicate names, IDs, and faces are automatically blocked.</div>
+      <a href="/register" class="card-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Register Face
+      </a>
+    </div>
+
+    <!-- View Attendance -->
+    <div class="menu-card card-3">
+      <div class="card-icon-wrap">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#06d6a0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+      </div>
+      <div class="card-title">View Attendance</div>
+      <div class="card-desc">Browse all attendance records with first name, last name, present/absent status, and AM/PM timestamps. Search and filter records instantly.</div>
+      <a href="/view" class="card-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+        View Records
+      </a>
+    </div>
+
+    <!-- Registered Students -->
+    <div class="menu-card card-4">
+      <div class="card-icon-wrap">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <div class="card-title">Registered Students</div>
+      <div class="card-desc">View all enrolled students with their photos, register numbers, attendance percentage, and quick access to individual profiles.</div>
+      <a href="/students" class="card-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        View Students
+      </a>
+    </div>
+
+    <!-- Activity Log — spans full width -->
+    <div class="menu-card card-5">
+      <div class="card-icon-wrap">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      </div>
+      <div class="card-title">Activity Log</div>
+      <div class="card-desc">Track every action in the system — registrations, attendance marking, overrides, edits, and deletions — with full timestamps and action history.</div>
+      <a href="/activity" class="card-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        View Log
+      </a>
+    </div>
+
+  </div>
+
+  <!-- Quick Actions -->
+  <div style="display:flex;gap:12px;margin-top:32px;flex-wrap:wrap;justify-content:center;">
+    <button onclick="openHoliday()" style="display:inline-flex;align-items:center;gap:8px;padding:11px 22px;background:transparent;color:#d97706;border:1.5px solid rgba(217,119,6,0.35);border-radius:10px;font-family:'Outfit',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(217,119,6,0.07)'" onmouseout="this.style.background='transparent'">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="10" y1="15" x2="14" y2="15"/></svg>
+      Declare Holiday
+    </button>
+    <button onclick="triggerAutoAbsent()" style="display:inline-flex;align-items:center;gap:8px;padding:11px 22px;background:transparent;color:#ef4444;border:1.5px solid rgba(239,68,68,0.3);border-radius:10px;font-family:'Outfit',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.06)'" onmouseout="this.style.background='transparent'">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" y1="11" x2="23" y2="11"/></svg>
+      Mark Remaining Absent
+    </button>
+  </div>
+
+  <!-- Holiday Modal -->
+  <div id="holiday-modal" style="display:none;position:fixed;inset:0;background:rgba(26,31,60,0.5);backdrop-filter:blur(4px);z-index:500;align-items:center;justify-content:center;">
+    <div style="background:#fff;border:1.5px solid rgba(67,97,238,0.14);border-radius:18px;padding:32px;width:400px;max-width:95vw;box-shadow:0 24px 60px rgba(67,97,238,0.2);">
+      <div style="font-size:1.1rem;font-weight:800;color:#1a1f3c;margin-bottom:6px;">Declare Holiday</div>
+      <div style="font-size:0.84rem;color:#6b7280;margin-bottom:22px;">All students will be marked Holiday for the selected date.</div>
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:0.72rem;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#1a1f3c;margin-bottom:7px;">Date</label>
+        <input type="date" id="holiday-date" style="width:100%;padding:11px 14px;background:#f7f9ff;border:1.5px solid rgba(67,97,238,0.14);border-radius:9px;font-family:Outfit,sans-serif;font-size:0.9rem;outline:none;color:#1a1f3c;"/>
+      </div>
+      <div style="margin-bottom:20px;">
+        <label style="display:block;font-size:0.72rem;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#1a1f3c;margin-bottom:7px;">Reason (optional)</label>
+        <input type="text" id="holiday-reason" placeholder="e.g. National Holiday" style="width:100%;padding:11px 14px;background:#f7f9ff;border:1.5px solid rgba(67,97,238,0.14);border-radius:9px;font-family:Outfit,sans-serif;font-size:0.9rem;outline:none;color:#1a1f3c;"/>
+      </div>
+      <div id="holiday-alert" style="display:none;padding:9px 14px;border-radius:9px;font-size:0.82rem;margin-bottom:12px;"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button onclick="closeHoliday()" style="padding:10px 20px;background:transparent;border:1.5px solid rgba(67,97,238,0.2);border-radius:9px;font-family:Outfit,sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;color:#6b7280;">Cancel</button>
+        <button onclick="submitHoliday()" style="padding:10px 20px;background:#d97706;color:#fff;border:none;border-radius:9px;font-family:Outfit,sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;">Declare Holiday</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live stats -->
+  <div class="stats-bar">
+    <div class="sb-item">
+      <span class="sb-n a" id="sb-reg">0</span>
+      <span class="sb-l">Registered</span>
+    </div>
+    <div class="sb-item">
+      <span class="sb-n b" id="sb-today">0</span>
+      <span class="sb-l">Present Today</span>
+    </div>
+    <div class="sb-item">
+      <span class="sb-n c" id="sb-total">0</span>
+      <span class="sb-l">Total Records</span>
+    </div>
+  </div>
+</div>
+
+
+<script>
+// BG canvas
+const cv=document.getElementById('bg-canvas'),cx=cv.getContext('2d');
+let W,H,ps=[];
+function rsz(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}
+window.addEventListener('resize',()=>{rsz();init();});rsz();
+class P{constructor(){this.r(true);}r(i=false){this.x=Math.random()*W;this.y=i?Math.random()*H:-10;this.vx=(Math.random()-.5)*.28;this.vy=Math.random()*.32+.07;this.rad=Math.random()*2+.5;this.a=Math.random()*.16+.05;this.h=Math.random()>.5?'67,97,238':'114,9,183';}u(){this.x+=this.vx;this.y+=this.vy;if(this.y>H+10)this.r();}d(){cx.save();cx.globalAlpha=this.a;cx.fillStyle=`rgba(${this.h},1)`;cx.beginPath();cx.arc(this.x,this.y,this.rad,0,Math.PI*2);cx.fill();cx.restore();}}
+function init(){ps=[];for(let i=0;i<80;i++)ps.push(new P());}init();
+function loop(){cx.clearRect(0,0,W,H);cx.save();cx.strokeStyle='rgba(67,97,238,0.032)';cx.lineWidth=1;for(let x=0;x<W;x+=60){cx.beginPath();cx.moveTo(x,0);cx.lineTo(x,H);cx.stroke();}for(let y=0;y<H;y+=60){cx.beginPath();cx.moveTo(0,y);cx.lineTo(W,y);cx.stroke();}cx.restore();for(let i=0;i<ps.length;i++)for(let j=i+1;j<ps.length;j++){const dx=ps[i].x-ps[j].x,dy=ps[i].y-ps[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<100){cx.save();cx.globalAlpha=(1-d/100)*.065;cx.strokeStyle='rgba(67,97,238,1)';cx.lineWidth=.5;cx.beginPath();cx.moveTo(ps[i].x,ps[i].y);cx.lineTo(ps[j].x,ps[j].y);cx.stroke();cx.restore();}}ps.forEach(p=>{p.u();p.d();});requestAnimationFrame(loop);}loop();
+
+// Stats — poll until data arrives
+async function loadStats(){
+  try{
+    const res = await fetch('/api/stats');
+    if(!res.ok) return;
+    const d = await res.json();
+    document.getElementById('sb-reg').textContent   = d.registered    ?? 0;
+    document.getElementById('sb-today').textContent = d.present_today ?? 0;
+    document.getElementById('sb-total').textContent = d.total_records ?? 0;
+  } catch(e){}
+}
+loadStats();
+setInterval(loadStats, 3000);
+
+// Session state
+async function loadSessionState(){
+  try{
+    const res=await fetch('/api/session-state');
+    const d=await res.json();
+    setSessionUI(d.active);
+  }catch(e){}
+}
+
+function setSessionUI(active){
+  const dot=document.getElementById('sess-dot');
+  const lbl=document.getElementById('sess-label');
+  const sub=document.getElementById('sess-sub');
+  const tog=document.getElementById('session-toggle');
+  const tl =document.getElementById('toggle-lbl');
+  if(active){
+    dot.className='session-dot on';
+    lbl.textContent='Attendance session open';
+    sub.textContent='Students can now take attendance';
+    tog.className='toggle-track on';
+    tl.textContent='ON'; tl.className='toggle-lbl on';
+  } else {
+    dot.className='session-dot off';
+    lbl.textContent='Attendance session closed';
+    sub.textContent='Students cannot take attendance right now';
+    tog.className='toggle-track';
+    tl.textContent='OFF'; tl.className='toggle-lbl off';
+  }
+}
+
+async function toggleSession(){
+  try{
+    const res=await fetch('/api/session-state');
+    const d=await res.json();
+    const endpoint=d.active?'/api/session-state/off':'/api/session-state/on';
+    await fetch(endpoint,{method:'POST'});
+    loadSessionState();
+  }catch(e){alert('Server error.');}
+}
+
+loadSessionState();
+
+function openHoliday(){
+  document.getElementById('holiday-date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('holiday-reason').value='';
+  document.getElementById('holiday-alert').style.display='none';
+  const m=document.getElementById('holiday-modal');
+  m.style.display='flex';
+  m.onclick=e=>{if(e.target===m)closeHoliday();};
+}
+function closeHoliday(){document.getElementById('holiday-modal').style.display='none';}
+async function submitHoliday(){
+  const d=document.getElementById('holiday-date').value;
+  const r=document.getElementById('holiday-reason').value.trim()||'Holiday';
+  if(!d){showHA('Please select a date.','error');return;}
+  try{
+    const res=await fetch('/api/holidays/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:d,reason:r})});
+    const data=await res.json();
+    showHA(data.message,data.success?'success':'error');
+    if(data.success)setTimeout(closeHoliday,1800);
+  }catch(e){showHA('Server error.','error');}
+}
+function showHA(msg,type){
+  const el=document.getElementById('holiday-alert');
+  el.style.display='block';
+  el.style.background=type==='success'?'rgba(6,214,160,0.1)':'rgba(239,68,68,0.08)';
+  el.style.border=type==='success'?'1px solid rgba(6,214,160,0.3)':'1px solid rgba(239,68,68,0.25)';
+  el.style.color=type==='success'?'#047857':'#b91c1c';
+  el.textContent=msg;
+}
+async function triggerAutoAbsent(){
+  if(!confirm('Mark all students with no attendance today as Absent?'))return;
+  const today=new Date().toISOString().slice(0,10);
+  try{
+    const res=await fetch('/api/auto-absent',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:today})});
+    const data=await res.json();
+    alert(data.message);
+  }catch(e){alert('Server error.');}
+}
+</script>
+</body>
+</html>

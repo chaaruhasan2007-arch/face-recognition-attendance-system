@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FaceTrack — Registered Students</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#f0f4ff;--surface:#ffffff;--surface2:#f7f9ff;
+  --accent:#4361ee;--accent2:#7209b7;--accent3:#06d6a0;
+  --warn:#d97706;--danger:#ef4444;
+  --text:#1a1f3c;--muted:#6b7280;--border:rgba(67,97,238,0.14);
+  --shadow:0 4px 20px rgba(67,97,238,0.09);
+  --glow:0 0 20px rgba(67,97,238,0.3);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{min-height:100vh;background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;cursor:default;}
+#bg-canvas{position:fixed;inset:0;z-index:0;}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 40px;border-bottom:1px solid var(--border);backdrop-filter:blur(20px);background:rgba(240,244,255,0.9);}
+.logo{font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:600;color:var(--accent);text-decoration:none;}
+.logo span{color:var(--accent2);}
+.nav-r{display:flex;align-items:center;gap:12px;}
+.back-btn{display:flex;align-items:center;gap:7px;font-size:0.82rem;font-weight:600;color:var(--muted);text-decoration:none;padding:7px 16px;border:1px solid var(--border);border-radius:8px;background:var(--surface);transition:all 0.2s;}
+.back-btn:hover{color:var(--accent);border-color:rgba(67,97,238,0.3);}
+
+.page{position:relative;z-index:10;min-height:100vh;padding:88px 48px 60px;max-width:1300px;margin:0 auto;}
+.breadcrumb{font-size:0.75rem;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.breadcrumb a{color:var(--accent);text-decoration:none;}
+.page-title{font-size:1.9rem;font-weight:800;color:var(--text);letter-spacing:-0.5px;margin-bottom:4px;}
+.page-sub{font-size:0.88rem;color:var(--muted);margin-bottom:28px;}
+
+/* Summary */
+.summary-strip{display:flex;gap:16px;margin-bottom:24px;}
+.sum-chip{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:16px 24px;box-shadow:var(--shadow);display:flex;align-items:center;gap:12px;flex:1;}
+.sum-chip-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sum-chip-val{font-family:'JetBrains Mono',monospace;font-size:1.6rem;font-weight:700;}
+.sum-chip-lbl{font-size:0.7rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
+
+/* Toolbar */
+.toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:12px;flex-wrap:wrap;}
+.search-box{position:relative;display:flex;align-items:center;}
+.search-box svg{position:absolute;left:12px;color:var(--muted);}
+.search-inp{padding:10px 14px 10px 38px;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;font-family:'Outfit',sans-serif;font-size:0.88rem;color:var(--text);width:280px;outline:none;transition:border-color 0.2s;}
+.search-inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(67,97,238,0.1);}
+.search-inp::placeholder{color:#b0b9d0;}
+.sort-select{padding:10px 14px;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;font-family:'Outfit',sans-serif;font-size:0.85rem;color:var(--text);outline:none;cursor:pointer;}
+
+/* Grid */
+.students-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px;}
+
+.student-card{background:var(--surface);border:1.5px solid var(--border);border-radius:16px;padding:22px 18px 18px;box-shadow:var(--shadow);text-align:center;transition:all 0.28s cubic-bezier(0.23,1,0.32,1);position:relative;overflow:hidden;}
+.student-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;opacity:0;transition:opacity 0.3s;background:linear-gradient(90deg,var(--accent),var(--accent2));}
+.student-card:hover{transform:translateY(-5px);box-shadow:0 14px 36px rgba(67,97,238,0.15);}
+.student-card:hover::before{opacity:1;}
+
+.sc-photo-wrap{position:relative;width:68px;height:68px;margin:0 auto 12px;}
+.sc-photo{width:68px;height:68px;border-radius:50%;object-fit:cover;border:3px solid var(--border);background:var(--surface2);}
+.sc-pct-badge{position:absolute;bottom:-3px;right:-3px;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:0.52rem;font-weight:700;border:2px solid var(--surface);}
+.sc-pct-badge.high{background:var(--accent3);color:#fff;}
+.sc-pct-badge.low{background:var(--danger);color:#fff;}
+
+.sc-name{font-size:0.92rem;font-weight:700;color:var(--text);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sc-regno{font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--accent);margin-bottom:12px;}
+
+.sc-progress-track{height:5px;background:var(--surface2);border-radius:10px;overflow:hidden;margin-bottom:4px;}
+.sc-progress-fill{height:100%;border-radius:10px;transition:width 0.8s ease;}
+.sc-progress-fill.high{background:var(--accent3);}
+.sc-progress-fill.low{background:var(--danger);}
+.sc-progress-label{display:flex;justify-content:space-between;font-size:0.66rem;color:var(--muted);margin-bottom:12px;}
+
+.sc-stats{display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px;}
+.sc-stat{flex:1;padding:7px 4px;text-align:center;border-right:1px solid var(--border);background:var(--surface2);}
+.sc-stat:last-child{border-right:none;}
+.sc-stat-val{font-family:'JetBrains Mono',monospace;font-size:0.85rem;font-weight:700;display:block;color:var(--text);}
+.sc-stat-lbl{font-size:0.58rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
+
+.sc-warn{font-size:0.7rem;color:var(--danger);font-weight:600;margin-bottom:10px;}
+
+/* Reset btn */
+.btn-reset{width:100%;padding:8px;background:transparent;color:var(--accent2);border:1.5px solid rgba(114,9,183,0.3);border-radius:8px;font-family:'Outfit',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.2s;}
+.btn-reset:hover{background:rgba(114,9,183,0.06);border-color:var(--accent2);transform:translateY(-1px);}
+.btn-delete{width:100%;padding:8px;background:transparent;color:var(--danger);border:1.5px solid rgba(239,68,68,0.3);border-radius:8px;font-family:'Outfit',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.2s;margin-top:8px;}
+.btn-delete:hover{background:rgba(239,68,68,0.06);border-color:var(--danger);transform:translateY(-1px);}
+.btn-row{display:flex;gap:8px;margin-top:0;}
+.btn-row .btn-reset,.btn-row .btn-delete{margin-top:0;}
+
+/* Skeleton */
+.skeleton{background:linear-gradient(90deg,var(--surface2) 25%,#e8eeff 50%,var(--surface2) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;}
+@keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+.skel-card{background:var(--surface);border:1.5px solid var(--border);border-radius:16px;padding:22px 18px;box-shadow:var(--shadow);}
+.skel-circle{width:68px;height:68px;border-radius:50%;margin:0 auto 12px;}
+.skel-line{height:12px;border-radius:6px;margin-bottom:8px;}
+.skel-line.w60{width:60%;margin:0 auto 8px;}
+.skel-line.w40{width:40%;margin:0 auto 12px;}
+.skel-bar{height:5px;border-radius:10px;margin-bottom:12px;}
+
+/* Empty */
+.empty-state{text-align:center;padding:80px;color:var(--muted);grid-column:1/-1;}
+.empty-state svg{margin:0 auto 16px;display:block;}
+
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(26,31,60,0.5);backdrop-filter:blur(4px);z-index:500;display:none;align-items:center;justify-content:center;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--surface);border:1.5px solid var(--border);border-radius:18px;padding:32px;width:400px;max-width:95vw;box-shadow:0 24px 60px rgba(67,97,238,0.2);animation:fadeUp 0.25s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.modal-icon{width:52px;height:52px;border-radius:14px;background:rgba(114,9,183,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.5rem;}
+.modal-title{font-size:1.1rem;font-weight:800;color:var(--text);text-align:center;margin-bottom:8px;}
+.modal-body{font-size:0.88rem;color:var(--muted);text-align:center;line-height:1.6;margin-bottom:20px;}
+.modal-body strong{color:var(--text);}
+.modal-alert{display:none;padding:10px 14px;border-radius:9px;font-size:0.82rem;font-weight:500;margin-bottom:14px;}
+.modal-alert.show{display:block;}
+.modal-alert.success{background:rgba(6,214,160,0.1);border:1px solid rgba(6,214,160,0.3);color:#047857;}
+.modal-alert.error{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);color:#b91c1c;}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;font-family:'Outfit',sans-serif;font-size:0.85rem;font-weight:700;border:none;border-radius:9px;cursor:pointer;transition:all 0.2s;}
+.btn-outline{background:transparent;color:var(--muted);border:1.5px solid var(--border);}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+.btn-purple{background:var(--accent2);color:#fff;}
+.btn-purple:hover{background:#5c00a0;box-shadow:0 0 16px rgba(114,9,183,0.35);transform:translateY(-1px);}
+.btn-purple:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:rgba(67,97,238,0.2);border-radius:4px;}
+</style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+
+<nav class="topbar">
+  <a href="/" class="logo">Face<span>Track</span></a>
+  <div class="nav-r">
+    <a href="/menu" class="back-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      Menu
+    </a>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="breadcrumb"><a href="/">Home</a><span>›</span><a href="/menu">Menu</a><span>›</span>Registered Students</div>
+  <div class="page-title">Registered Students</div>
+  <div class="page-sub">All enrolled students with attendance summary</div>
+
+  <div class="summary-strip">
+    <div class="sum-chip">
+      <div class="sum-chip-icon" style="background:rgba(67,97,238,0.1);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4361ee" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+      <div><div class="sum-chip-val" style="color:var(--accent);" id="sc-total">0</div><div class="sum-chip-lbl">Total Students</div></div>
+    </div>
+    <div class="sum-chip">
+      <div class="sum-chip-icon" style="background:rgba(6,214,160,0.1);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#06d6a0" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div><div class="sum-chip-val" style="color:var(--accent3);" id="sc-good">0</div><div class="sum-chip-lbl">≥ 75% Attendance</div></div>
+    </div>
+    <div class="sum-chip">
+      <div class="sum-chip-icon" style="background:rgba(239,68,68,0.08);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+      <div><div class="sum-chip-val" style="color:var(--danger);" id="sc-low">0</div><div class="sum-chip-lbl">Below 75%</div></div>
+    </div>
+    <div class="sum-chip">
+      <div class="sum-chip-icon" style="background:rgba(245,158,11,0.1);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+      <div><div class="sum-chip-val" style="color:var(--warn);" id="sc-today">0</div><div class="sum-chip-lbl">Present Today</div></div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+      <div class="search-box">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="search-inp" id="search-inp" type="text" placeholder="Search by name or register number…" oninput="filterStudents()"/>
+      </div>
+      <select class="sort-select" id="email-threshold" title="Email alert threshold">
+        <option value="75">Below 75%</option>
+        <option value="50">Below 50%</option>
+        <option value="25">Below 25%</option>
+      </select>
+      <button class="btn btn-purple" type="button" id="send-alert-btn" onclick="sendManualEmailAlerts()">
+        Send Email Alert
+      </button>
+    </div>
+    <select class="sort-select" id="sort-sel" onchange="filterStudents()">
+      <option value="name">Sort: Name A–Z</option>
+      <option value="name_desc">Sort: Name Z–A</option>
+      <option value="pct_desc">Sort: Attendance High–Low</option>
+      <option value="pct_asc">Sort: Attendance Low–High</option>
+      <option value="date">Sort: Newest First</option>
+    </select>
+  </div>
+
+  <div class="students-grid" id="students-grid">
+    <div class="skel-card"><div class="skel-circle skeleton"></div><div class="skel-line w60 skeleton"></div><div class="skel-line w40 skeleton"></div><div class="skel-bar skeleton"></div></div>
+    <div class="skel-card"><div class="skel-circle skeleton"></div><div class="skel-line w60 skeleton"></div><div class="skel-line w40 skeleton"></div><div class="skel-bar skeleton"></div></div>
+    <div class="skel-card"><div class="skel-circle skeleton"></div><div class="skel-line w60 skeleton"></div><div class="skel-line w40 skeleton"></div><div class="skel-bar skeleton"></div></div>
+    <div class="skel-card"><div class="skel-circle skeleton"></div><div class="skel-line w60 skeleton"></div><div class="skel-line w40 skeleton"></div><div class="skel-bar skeleton"></div></div>
+    <div class="skel-card"><div class="skel-circle skeleton"></div><div class="skel-line w60 skeleton"></div><div class="skel-line w40 skeleton"></div><div class="skel-bar skeleton"></div></div>
+    <div class="skel-card"><div class="skel-circle skeleton"></div><div class="skel-line w60 skeleton"></div><div class="skel-line w40 skeleton"></div><div class="skel-bar skeleton"></div></div>
+  </div>
+</div>
+
+<!-- Delete Student Modal -->
+<div class="modal-bg" id="delete-modal">
+  <div class="modal">
+    <div class="modal-icon" style="background:rgba(239,68,68,0.1);">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6m4-6v6"/></svg>
+    </div>
+    <div class="modal-title">Delete Student</div>
+    <div class="modal-body" id="delete-body">Are you sure?</div>
+    <div class="modal-alert" id="delete-alert"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeDelete()">Cancel</button>
+      <button class="btn" id="delete-confirm-btn" onclick="confirmDelete()"
+        style="background:var(--danger);color:#fff;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+        Delete
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Reset Password Modal -->
+<div class="modal-bg" id="reset-modal">
+  <div class="modal">
+    <div class="modal-icon">🔑</div>
+    <div class="modal-title">Reset Password</div>
+    <div class="modal-body" id="reset-body">Reset this student's password?</div>
+    <div class="modal-alert" id="reset-alert"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeReset()">Cancel</button>
+      <button class="btn btn-purple" id="reset-confirm-btn" onclick="confirmReset()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Reset Password
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// BG canvas
+const bgC=document.getElementById('bg-canvas'),bgX=bgC.getContext('2d');
+let BW,BH,bps=[];
+function brsz(){BW=bgC.width=window.innerWidth;BH=bgC.height=window.innerHeight;}
+window.addEventListener('resize',()=>{brsz();binit();});brsz();
+class BP{constructor(){this.r(true);}r(i=false){this.x=Math.random()*BW;this.y=i?Math.random()*BH:-10;this.vx=(Math.random()-.5)*.28;this.vy=Math.random()*.32+.07;this.rad=Math.random()*2+.5;this.a=Math.random()*.15+.05;this.h=Math.random()>.5?'67,97,238':'114,9,183';}u(){this.x+=this.vx;this.y+=this.vy;if(this.y>BH+10)this.r();}d(){bgX.save();bgX.globalAlpha=this.a;bgX.fillStyle=`rgba(${this.h},1)`;bgX.beginPath();bgX.arc(this.x,this.y,this.rad,0,Math.PI*2);bgX.fill();bgX.restore();}}
+function binit(){bps=[];for(let i=0;i<60;i++)bps.push(new BP());}binit();
+function blog(){bgX.clearRect(0,0,BW,BH);bgX.save();bgX.strokeStyle='rgba(67,97,238,0.03)';bgX.lineWidth=1;for(let x=0;x<BW;x+=60){bgX.beginPath();bgX.moveTo(x,0);bgX.lineTo(x,BH);bgX.stroke();}for(let y=0;y<BH;y+=60){bgX.beginPath();bgX.moveTo(0,y);bgX.lineTo(BW,y);bgX.stroke();}bgX.restore();for(let i=0;i<bps.length;i++)for(let j=i+1;j<bps.length;j++){const dx=bps[i].x-bps[j].x,dy=bps[i].y-bps[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<100){bgX.save();bgX.globalAlpha=(1-d/100)*.06;bgX.strokeStyle='rgba(67,97,238,1)';bgX.lineWidth=.5;bgX.beginPath();bgX.moveTo(bps[i].x,bps[i].y);bgX.lineTo(bps[j].x,bps[j].y);bgX.stroke();bgX.restore();}}bps.forEach(p=>{p.u();p.d();});requestAnimationFrame(blog);}blog();
+
+// ── Data ──────────────────────────────────────────────────────────────────
+let allStudents = [];
+let todayPresent = new Set();
+
+async function loadStudents() {
+  try {
+    const [sr, ar] = await Promise.all([
+      fetch('/api/students').then(r => r.json()),
+      fetch('/api/attendance?date=' + new Date().toISOString().slice(0,10)).then(r => r.json())
+    ]);
+    allStudents  = sr.students || [];
+    const att    = ar.attendance || [];
+    todayPresent = new Set(att.filter(a => a.status === 'Present').map(a => a.reg_number));
+
+    document.getElementById('sc-total').textContent = allStudents.length;
+    document.getElementById('sc-good').textContent  = allStudents.filter(s => (s.attendance_pct||0) >= 75).length;
+    document.getElementById('sc-low').textContent   = allStudents.filter(s => (s.attendance_pct||0) < 75 && (s.total_days||0) > 0).length;
+    document.getElementById('sc-today').textContent = todayPresent.size;
+
+    filterStudents();
+  } catch(e) {
+    document.getElementById('students-grid').innerHTML =
+      '<div class="empty-state"><p>Failed to load — is Flask running?</p></div>';
+  }
+}
+
+function filterStudents() {
+  const q    = document.getElementById('search-inp').value.trim().toLowerCase();
+  const sort = document.getElementById('sort-sel').value;
+
+  let list = allStudents.filter(s =>
+    !q ||
+    (s.first_name||'').toLowerCase().includes(q) ||
+    (s.last_name ||'').toLowerCase().includes(q)  ||
+    (s.reg_number||'').toLowerCase().includes(q)
+  );
+
+  list = [...list].sort((a, b) => {
+    if (sort === 'name')     return `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`);
+    if (sort === 'name_desc')return `${b.first_name} ${b.last_name}`.localeCompare(`${a.first_name} ${a.last_name}`);
+    if (sort === 'pct_desc') return (b.attendance_pct||0) - (a.attendance_pct||0);
+    if (sort === 'pct_asc')  return (a.attendance_pct||0) - (b.attendance_pct||0);
+    if (sort === 'date')     return (b.registered_at||'').localeCompare(a.registered_at||'');
+    return 0;
+  });
+
+  renderGrid(list);
+}
+
+function renderGrid(list) {
+  const grid = document.getElementById('students-grid');
+  if (!list.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
+      <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <p>No students found</p></div>`;
+    return;
+  }
+
+  grid.innerHTML = list.map(s => {
+    const pct     = s.attendance_pct || 0;
+    const isHigh  = pct >= 75;
+    const isLow   = pct < 75 && (s.total_days||0) > 0;
+    const present = s.present_days || 0;
+    const total   = s.total_days   || 0;
+    const absent  = total - present;
+    const isToday = todayPresent.has(s.reg_number);
+    const regn    = s.reg_number || '';
+    const name    = `${s.first_name||''} ${s.last_name||''}`.trim();
+
+    return `
+    <div class="student-card" onclick="openStudentProfile('${regn}')" style="cursor:pointer;">
+      <div class="sc-photo-wrap">
+        <img class="sc-photo" src="/api/student_photo/${regn}" alt="${name}"
+             onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2268%22 height=%2268%22 viewBox=%220 0 68 68%22><rect width=%2268%22 height=%2268%22 rx=%2234%22 fill=%22%23e8eeff%22/><text x=%2234%22 y=%2242%22 text-anchor=%22middle%22 font-size=%2224%22 font-family=%22Outfit,sans-serif%22 fill=%22%234361ee%22>${(s.first_name||'?').charAt(0).toUpperCase()}${(s.last_name||'?').charAt(0).toUpperCase()}</text></svg>'"/>
+        ${total > 0 ? `<div class="sc-pct-badge ${isHigh?'high':'low'}">${pct}%</div>` : ''}
+      </div>
+      <div class="sc-name">${name}</div>
+      <div class="sc-regno">${regn}</div>
+
+      ${total > 0 ? `
+      <div class="sc-progress-track">
+        <div class="sc-progress-fill ${isHigh?'high':'low'}" style="width:${pct}%;"></div>
+      </div>
+      <div class="sc-progress-label"><span>${pct}% attendance</span><span>${present}/${total} days</span></div>
+      <div class="sc-stats">
+        <div class="sc-stat"><span class="sc-stat-val" style="color:var(--accent3);">${present}</span><span class="sc-stat-lbl">Present</span></div>
+        <div class="sc-stat"><span class="sc-stat-val" style="color:var(--danger);">${absent}</span><span class="sc-stat-lbl">Absent</span></div>
+        <div class="sc-stat"><span class="sc-stat-val" style="color:${isToday?'var(--accent3)':'var(--muted)'};">${isToday?'✓':'—'}</span><span class="sc-stat-lbl">Today</span></div>
+      </div>
+      ${isLow ? '<div class="sc-warn">⚠️ Below 75% threshold</div>' : ''}
+      ` : `<div style="font-size:0.75rem;color:var(--muted);margin:8px 0 12px;">No attendance yet</div>`}
+
+      <div class="btn-row">
+        <button class="btn-reset" onclick="event.stopPropagation(); openReset('${regn}','${name}')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Reset
+        </button>
+        <button class="btn-delete" onclick="event.stopPropagation(); openDelete('${regn}','${name}')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6m4-6v6"/></svg>
+          Delete
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+
+function openStudentProfile(regn) {
+  window.location.href = `/student/${encodeURIComponent(regn)}`;
+}
+
+
+// ── Delete student ────────────────────────────────────────────────────────
+let deleteRegNum = null;
+
+function openDelete(regNum, name) {
+  deleteRegNum = regNum;
+  document.getElementById('delete-body').innerHTML =
+    `This will permanently remove <strong>${name}</strong> (${regNum}) and all their attendance records. This cannot be undone.`;
+  document.getElementById('delete-alert').className = 'modal-alert';
+  document.getElementById('delete-confirm-btn').disabled = false;
+  document.getElementById('delete-modal').classList.add('open');
+}
+
+function closeDelete() {
+  document.getElementById('delete-modal').classList.remove('open');
+  deleteRegNum = null;
+}
+
+async function confirmDelete() {
+  if (!deleteRegNum) return;
+  const btn = document.getElementById('delete-confirm-btn');
+  btn.disabled = true;
+  btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin 1s linear infinite"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Deleting…`;
+  try {
+    const res  = await fetch(`/api/student/${deleteRegNum}/delete`, { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+      const al = document.getElementById('delete-alert');
+      al.className = 'modal-alert success show';
+      al.textContent = data.message;
+      setTimeout(() => { closeDelete(); loadStudents(); }, 1500);
+    } else {
+      const al = document.getElementById('delete-alert');
+      al.className = 'modal-alert error show';
+      al.textContent = data.message || 'Delete failed.';
+      btn.disabled = false;
+    }
+  } catch(e) {
+    document.getElementById('delete-alert').className = 'modal-alert error show';
+    document.getElementById('delete-alert').textContent = 'Server error.';
+    btn.disabled = false;
+  }
+  btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg> Delete`;
+}
+
+document.getElementById('delete-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('delete-modal')) closeDelete();
+});
+
+// ── Reset password modal ──────────────────────────────────────────────────
+let resetRegNum = null;
+
+function openReset(regNum, name) {
+  resetRegNum = regNum;
+  document.getElementById('reset-body').innerHTML =
+    `Reset <strong>${name}</strong>'s password back to their register number (<strong>${regNum}</strong>)?`;
+  document.getElementById('reset-alert').className = 'modal-alert';
+  document.getElementById('reset-confirm-btn').disabled = false;
+  document.getElementById('reset-modal').classList.add('open');
+}
+
+function closeReset() {
+  document.getElementById('reset-modal').classList.remove('open');
+  resetRegNum = null;
+}
+
+async function confirmReset() {
+  if (!resetRegNum) return;
+  const btn = document.getElementById('reset-confirm-btn');
+  btn.disabled = true;
+  btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin 1s linear infinite"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Resetting…`;
+  try {
+    const res  = await fetch(`/api/student/${resetRegNum}/reset-password`, { method: 'POST' });
+    const data = await res.json();
+    const al   = document.getElementById('reset-alert');
+    al.className = 'modal-alert ' + (data.success ? 'success' : 'error') + ' show';
+    al.textContent = data.message;
+    if (data.success) setTimeout(closeReset, 1800);
+    else btn.disabled = false;
+  } catch(e) {
+    document.getElementById('reset-alert').className = 'modal-alert error show';
+    document.getElementById('reset-alert').textContent = 'Server error.';
+    btn.disabled = false;
+  }
+  btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Reset Password`;
+}
+
+document.getElementById('reset-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('reset-modal')) closeReset();
+});
+
+const style = document.createElement('style');
+style.textContent = '@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}';
+document.head.appendChild(style);
+
+async function sendManualEmailAlerts() {
+  const threshold = document.getElementById('email-threshold').value;
+  const ok = confirm(`Send email alerts to all students below ${threshold}% attendance?`);
+  if (!ok) return;
+
+  const btn = document.getElementById('send-alert-btn');
+  const oldText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = 'Sending…';
+
+  try {
+    const res = await fetch('/api/email-alerts/manual', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ threshold: Number(threshold) })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      alert(data.message || `Email alert completed. Sent: ${data.sent || 0}`);
+    } else {
+      alert(data.message || 'Email alert failed.');
+    }
+  } catch (e) {
+    alert('Server error while sending email alerts.');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = oldText;
+  }
+}
+
+loadStudents();
+</script>
+</body>
+</html>

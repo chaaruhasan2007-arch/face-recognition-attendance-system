@@ -1,0 +1,25 @@
+/* FaceTrack Mobile Responsive Update */
+@media (max-width: 900px) {
+  .topbar { padding: 12px 16px !important; }
+  .page, .wrapper, .hero { padding-left: 16px !important; padding-right: 16px !important; }
+  .summary, .summary-strip, .stats, .cards, .students-grid, .layout, .content, .profile-header { grid-template-columns: 1fr !important; }
+  .summary, .summary-strip { display: grid !important; gap: 12px !important; }
+  .toolbar, .tool-actions, .nav-actions, .topbar-right, .nav-r { gap: 8px !important; flex-wrap: wrap !important; }
+  .search-inp, .search-box, .sort-select, input, select { width: 100% !important; max-width: 100% !important; }
+  .student-card, .feed-card, .card, .sum-card, .sum-chip { width: 100% !important; }
+  .profile-header { display: grid !important; text-align: center !important; justify-items: center !important; }
+  .ph-meta, .student-meta { justify-content: center !important; }
+  .email-card { display: grid !important; grid-template-columns: auto 1fr !important; align-items: center !important; }
+  .email-btn { grid-column: 1 / -1 !important; width: 100% !important; }
+  .table-wrap, .attendance-table-wrap, .table-container { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; }
+  table { min-width: 720px !important; }
+  .btn, button { min-height: 42px !important; }
+}
+@media (max-width: 520px) {
+  .page-title, .welcome, .hero-title { font-size: 1.65rem !important; line-height: 1.15 !important; }
+  .page-sub, .welcome-sub { font-size: 0.9rem !important; }
+  .summary, .summary-strip { grid-template-columns: 1fr !important; }
+  .sum-chip, .sum-card { padding: 16px !important; }
+  .student-photo, .ph-photo, .sc-photo { width: 74px !important; height: 74px !important; }
+  .modal-card, .card { max-width: calc(100vw - 24px) !important; padding: 24px 18px !important; }
+}

@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FaceTrack — View Attendance</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#f0f4ff; --surface:#ffffff; --surface2:#f7f9ff;
+  --accent:#4361ee; --accent2:#7209b7; --accent3:#06d6a0;
+  --danger:#ef4444;
+  --text:#1a1f3c; --muted:#6b7280; --border:rgba(67,97,238,0.14);
+  --shadow:0 4px 24px rgba(67,97,238,0.1);
+  --glow:0 0 18px rgba(67,97,238,0.3);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{min-height:100vh;background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;cursor:default;}
+#bg-canvas{position:fixed;inset:0;z-index:0;}
+
+/* TOPBAR */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:16px 48px;border-bottom:1px solid var(--border);backdrop-filter:blur(20px);background:rgba(240,244,255,0.9);}
+.logo{display:inline-flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:1.05rem;font-weight:700;text-decoration:none;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.logo svg{flex-shrink:0;}
+.logo span{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.nav-actions{display:flex;align-items:center;gap:12px;}
+.back-btn{display:flex;align-items:center;gap:7px;font-size:0.82rem;font-weight:600;color:var(--muted);text-decoration:none;padding:7px 16px;border:1px solid var(--border);border-radius:8px;background:var(--surface);transition:all 0.2s;}
+.back-btn:hover{color:var(--accent);border-color:rgba(67,97,238,0.3);}
+.sys-pill{display:flex;align-items:center;gap:7px;font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--accent3);background:rgba(6,214,160,0.08);border:1px solid rgba(6,214,160,0.25);padding:6px 14px;border-radius:100px;}
+.s-dot{width:6px;height:6px;background:var(--accent3);border-radius:50%;animation:pulse 1.8s infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(6,214,160,0.5);}50%{box-shadow:0 0 0 5px rgba(6,214,160,0);}}
+
+/* PAGE */
+.page{position:relative;z-index:10;min-height:100vh;padding:96px 48px 60px;max-width:1300px;margin:0 auto;}
+.page-header{margin-bottom:28px;}
+.breadcrumb{font-size:0.75rem;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.breadcrumb a{color:var(--accent);text-decoration:none;}
+.page-title{font-size:1.9rem;font-weight:800;color:var(--text);letter-spacing:-0.5px;margin-bottom:4px;}
+.page-sub{font-size:0.88rem;color:var(--muted);}
+
+/* SUMMARY CARDS */
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;}
+.sum-card{background:var(--surface);border:1.5px solid var(--border);border-radius:16px;padding:22px 24px;box-shadow:var(--shadow);display:flex;align-items:center;gap:16px;transition:transform 0.25s;}
+.sum-card:hover{transform:translateY(-3px);}
+.sum-ico{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sum-ico.t{background:rgba(67,97,238,0.1);}
+.sum-ico.p{background:rgba(6,214,160,0.1);}
+.sum-ico.a{background:rgba(239,68,68,0.08);}
+.sum-val{font-family:'JetBrains Mono',monospace;font-size:1.9rem;font-weight:600;}
+.sum-val.t{color:var(--accent);}
+.sum-val.p{color:var(--accent3);}
+.sum-val.a{color:var(--danger);}
+.sum-lbl{font-size:0.7rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:3px;}
+
+/* TOOLBAR */
+.toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:12px;flex-wrap:wrap;position:sticky;top:72px;z-index:90;background:rgba(240,244,255,0.95);backdrop-filter:blur(12px);padding:10px 0;margin-left:-2px;margin-right:-2px;overflow:visible;}
+.search-box{position:relative;display:flex;align-items:center;}
+.search-box svg{position:absolute;left:12px;color:var(--muted);}
+.search-inp{padding:10px 14px 10px 38px;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;font-family:'Outfit',sans-serif;font-size:0.88rem;color:var(--text);width:260px;outline:none;transition:border-color 0.2s,box-shadow 0.2s;}
+.search-inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(67,97,238,0.1);}
+.search-inp::placeholder{color:#b0b9d0;}
+.tool-actions{display:flex;gap:10px;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;font-family:'Outfit',sans-serif;font-size:0.85rem;font-weight:700;border:none;border-radius:9px;cursor:pointer;transition:all 0.25s cubic-bezier(0.23,1,0.32,1);}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:#3451d1;box-shadow:0 0 20px rgba(67,97,238,0.35);transform:translateY(-2px);}
+.btn-outline{background:transparent;color:var(--accent);border:1.5px solid rgba(67,97,238,0.3);}
+.btn-outline:hover{background:rgba(67,97,238,0.06);border-color:var(--accent);box-shadow:var(--glow);transform:translateY(-2px);}
+.btn-red{background:transparent;color:var(--danger);border:1.5px solid rgba(239,68,68,0.3);}
+.btn-red:hover{background:rgba(239,68,68,0.06);border-color:var(--danger);transform:translateY(-2px);}
+.btn-excel{background:var(--accent3);color:#fff;}
+.btn-excel:hover{filter:brightness(1.05);box-shadow:0 0 20px rgba(6,214,160,0.4);transform:translateY(-2px);}
+/* Download dropdowns */
+.dl-wrap{position:relative;display:inline-block;}
+.dl-wrap.open .dl-menu{opacity:1;pointer-events:auto;transform:translateY(0);}
+.dl-menu{position:absolute;top:calc(100% + 6px);right:0;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;box-shadow:0 8px 28px rgba(67,97,238,0.18);min-width:180px;z-index:200;opacity:0;pointer-events:none;transform:translateY(-6px);transition:all 0.2s cubic-bezier(0.23,1,0.32,1);overflow:hidden;}
+.dl-item{display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:0.84rem;font-weight:600;color:var(--text);cursor:pointer;transition:background 0.15s;border-bottom:1px solid var(--border);white-space:nowrap;}
+.dl-item:last-child{border-bottom:none;}
+.dl-item:hover{background:var(--surface2);}
+.dl-item svg{flex-shrink:0;}
+.dl-item.all svg{color:var(--accent);}
+.dl-item.present svg{color:var(--accent3);}
+.dl-item.absent svg{color:var(--danger);}
+.dl-arrow{font-size:0.7rem;margin-left:auto;color:var(--muted);}
+.btn-pdf{background:var(--danger);color:#fff;}
+.btn-pdf:hover{filter:brightness(1.08);box-shadow:0 0 20px rgba(239,68,68,0.4);transform:translateY(-2px);}
+.btn-override{background:transparent;color:var(--accent2);border:1.5px solid rgba(114,9,183,0.3);padding:5px 12px;font-size:0.75rem;}
+.btn-override:hover{background:rgba(114,9,183,0.06);border-color:var(--accent2);transform:translateY(-1px);}
+.att-pct{display:inline-flex;align-items:center;gap:4px;font-family:'JetBrains Mono',monospace;font-size:0.78rem;font-weight:700;}
+.att-pct.high{color:var(--accent3);}
+.att-pct.low{color:var(--danger);}
+/* Date range modal */
+.dr-modal-bg{position:fixed;inset:0;background:rgba(26,31,60,0.5);backdrop-filter:blur(4px);z-index:600;display:none;align-items:center;justify-content:center;}
+.dr-modal-bg.open{display:flex;}
+.dr-modal{background:var(--surface);border:1.5px solid var(--border);border-radius:18px;padding:32px;width:420px;max-width:95vw;box-shadow:0 24px 60px rgba(67,97,238,0.2);animation:fadeUp 0.25s ease;}
+.dr-title{font-size:1.1rem;font-weight:800;color:var(--text);margin-bottom:4px;}
+.dr-sub{font-size:0.82rem;color:var(--muted);margin-bottom:22px;}
+.dr-row{display:flex;gap:14px;margin-bottom:18px;}
+.dr-group{flex:1;}
+.dr-label{display:block;font-size:0.72rem;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--text);margin-bottom:7px;}
+.dr-input{width:100%;padding:11px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-family:'Outfit',sans-serif;font-size:0.9rem;outline:none;transition:border-color 0.2s;}
+.dr-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(67,97,238,0.1);}
+.dr-alert{display:none;padding:9px 14px;border-radius:9px;font-size:0.82rem;margin-bottom:12px;color:#b91c1c;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);}
+.dr-alert.show{display:block;}
+.dr-footer{display:flex;gap:10px;justify-content:flex-end;}
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(26,31,60,0.5);backdrop-filter:blur(4px);z-index:500;display:none;align-items:center;justify-content:center;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--surface);border:1.5px solid var(--border);border-radius:18px;padding:32px;width:440px;max-width:95vw;box-shadow:0 24px 60px rgba(67,97,238,0.2);animation:fadeUp 0.25s ease;}
+.modal-title{font-size:1.1rem;font-weight:800;color:var(--text);margin-bottom:6px;}
+.modal-sub{font-size:0.82rem;color:var(--muted);margin-bottom:24px;}
+.modal-row{display:flex;gap:12px;margin-bottom:16px;}
+.modal-group{flex:1;display:flex;flex-direction:column;gap:6px;}
+.modal-label{font-size:0.72rem;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--text);}
+.modal-input{padding:10px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-family:"Outfit",sans-serif;font-size:0.9rem;outline:none;transition:border-color 0.2s;}
+.modal-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(67,97,238,0.1);}
+.modal-select{padding:10px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-family:"Outfit",sans-serif;font-size:0.9rem;outline:none;cursor:pointer;}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:8px;}
+.modal-alert{display:none;padding:10px 14px;border-radius:9px;font-size:0.82rem;font-weight:500;align-items:center;gap:8px;margin-bottom:12px;}
+.modal-alert.show{display:flex;}
+.modal-alert.success{background:rgba(6,214,160,0.1);border:1px solid rgba(6,214,160,0.3);color:#047857;}
+.modal-alert.error{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);color:#b91c1c;}
+.date-filter{display:flex;align-items:center;gap:8px;}
+.date-label{font-size:0.78rem;font-weight:600;color:var(--muted);white-space:nowrap;}
+.date-inp{padding:10px 14px;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;font-family:'Outfit',sans-serif;font-size:0.88rem;color:var(--text);outline:none;transition:border-color 0.2s,box-shadow 0.2s;cursor:pointer;}
+.date-inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(67,97,238,0.1);}
+.btn-clear-date{display:flex;align-items:center;gap:5px;padding:10px 14px;font-family:'Outfit',sans-serif;font-size:0.8rem;font-weight:600;background:transparent;color:var(--muted);border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:all 0.2s;}
+.btn-clear-date:hover{color:var(--accent);border-color:rgba(67,97,238,0.3);}
+
+/* TABLE */
+.table-wrap{background:var(--surface);border:1.5px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:var(--shadow);}
+table{width:100%;border-collapse:collapse;}
+thead th{padding:14px 20px;font-size:0.68rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);text-align:left;border-bottom:1px solid var(--border);background:var(--surface2);}
+tbody tr{border-bottom:1px solid rgba(67,97,238,0.055);transition:background 0.15s;}
+tbody tr:hover{background:rgba(67,97,238,0.03);}
+tbody tr:last-child{border-bottom:none;}
+tbody td{padding:14px 20px;font-size:0.9rem;}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:100px;font-size:0.68rem;font-weight:700;letter-spacing:0.5px;}
+.badge.present{background:rgba(6,214,160,0.1);color:#047857;border:1px solid rgba(6,214,160,0.3);}
+.badge.absent{background:rgba(239,68,68,0.08);color:#b91c1c;border:1px solid rgba(239,68,68,0.2);}
+.badge.holiday{background:rgba(245,158,11,0.1);color:#92400e;border:1px solid rgba(245,158,11,0.3);}
+.empty-row td{text-align:center;padding:60px;color:var(--muted);font-size:0.88rem;letter-spacing:1px;}
+
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:rgba(67,97,238,0.2);border-radius:4px;}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+
+<nav class="topbar">
+  <a href="/" class="logo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="url(#lg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#4361ee"/><stop offset="100%" stop-color="#7209b7"/></linearGradient></defs><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>Face<span>Track</span></a>
+  <div class="nav-actions">
+    <a href="/menu" class="back-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      Menu
+    </a>
+    <div class="sys-pill"><div class="s-dot"></div>VIEW MODE</div>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="page-header">
+    <div class="breadcrumb"><a href="/">Home</a> <span>›</span> <a href="/menu">Menu</a> <span>›</span> View Attendance</div>
+    <div class="page-title">View Attendance</div>
+    <div class="page-sub">Browse all attendance records with status and timestamps</div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="sum-card">
+      <div class="sum-ico t"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4361ee" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+      <div><div class="sum-val t" id="s-total">0</div><div class="sum-lbl">Total Records</div></div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-ico p"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#06d6a0" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div><div class="sum-val p" id="s-present">0</div><div class="sum-lbl">Present</div></div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-ico a"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+      <div><div class="sum-val a" id="s-absent">0</div><div class="sum-lbl">Absent</div></div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <!-- Left: Search + Date filter -->
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <div class="search-box">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="search-inp" id="search-inp" type="text" placeholder="Search name or reg number…" oninput="applyFilters()"/>
+      </div>
+      <div class="date-filter">
+        <span class="date-label">Date:</span>
+        <input class="date-inp" type="date" id="date-inp" onchange="applyFilters()"/>
+        <button class="btn-clear-date" onclick="clearDateFilter()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          All Dates
+        </button>
+      </div>
+    </div>
+    <!-- Right: Actions -->
+    <div class="tool-actions">
+      <!-- PDF dropdown -->
+      <div class="dl-wrap" id="pdf-wrap">
+        <button class="btn btn-pdf" onclick="toggleDrop('pdf-wrap')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          PDF ▾
+        </button>
+        <div class="dl-menu">
+          <div class="dl-item all" onclick="openDR('pdf','all')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            All (Present + Absent)
+          </div>
+          <div class="dl-item present" onclick="openDR('pdf','present')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Present Only
+          </div>
+          <div class="dl-item absent" onclick="openDR('pdf','absent')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Absent Only
+          </div>
+        </div>
+      </div>
+      <!-- Excel dropdown -->
+      <div class="dl-wrap" id="excel-wrap">
+        <button class="btn btn-excel" onclick="toggleDrop('excel-wrap')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Excel ▾
+        </button>
+        <div class="dl-menu">
+          <div class="dl-item all" onclick="openDR('excel','all')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            All (Present + Absent)
+          </div>
+          <div class="dl-item present" onclick="openDR('excel','present')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Present Only
+          </div>
+          <div class="dl-item absent" onclick="openDR('excel','absent')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Absent Only
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-outline" onclick="loadAttendance()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Refresh
+      </button>
+      <button class="btn btn-red" onclick="clearAll()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+        Clear All
+      </button>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>First Name</th>
+          <th>Last Name</th>
+          <th>Register Number</th>
+          <th>Date</th>
+          <th>Status</th>
+          <th>Time</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="att-tbody">
+        <tr class="empty-row"><td colspan="7">Loading records…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Date Range Modal -->
+<div class="dr-modal-bg" id="dr-modal">
+  <div class="dr-modal">
+    <div class="dr-title" id="dr-title">Select date range</div>
+    <div class="dr-sub" id="dr-sub">Export records for a specific period</div>
+    <div class="dr-row">
+      <div class="dr-group">
+        <label class="dr-label">From date</label>
+        <input class="dr-input" type="date" id="dr-from"/>
+      </div>
+      <div class="dr-group">
+        <label class="dr-label">To date</label>
+        <input class="dr-input" type="date" id="dr-to"/>
+      </div>
+    </div>
+    <div class="dr-alert" id="dr-alert"></div>
+    <div class="dr-footer">
+      <button class="btn btn-outline" onclick="closeDR()">Cancel</button>
+      <button class="btn btn-primary" id="dr-export-btn" onclick="confirmDRExport()">Export</button>
+    </div>
+  </div>
+</div>
+
+<!-- Override Modal -->
+<div class="modal-bg" id="override-modal">
+  <div class="modal">
+    <div class="modal-title">Manual Attendance Override</div>
+    <div class="modal-sub" id="override-sub">Update attendance for a student</div>
+    <div class="modal-alert" id="override-alert"></div>
+    <div class="modal-row">
+      <div class="modal-group">
+        <label class="modal-label">Date</label>
+        <input class="modal-input" type="date" id="ov-date"/>
+      </div>
+      <div class="modal-group">
+        <label class="modal-label">Status</label>
+        <select class="modal-select" id="ov-status">
+          <option value="Present">Present</option>
+          <option value="Absent">Absent</option>
+        </select>
+      </div>
+    </div>
+    <input type="hidden" id="ov-reg"/>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeOverride()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitOverride()">Save Override</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// BG canvas
+const cv=document.getElementById('bg-canvas'),cx=cv.getContext('2d');
+let W,H,ps=[];
+function rsz(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}
+window.addEventListener('resize',()=>{rsz();init();});rsz();
+class P{constructor(){this.r(true);}r(i=false){this.x=Math.random()*W;this.y=i?Math.random()*H:-10;this.vx=(Math.random()-.5)*.28;this.vy=Math.random()*.32+.07;this.rad=Math.random()*2+.5;this.a=Math.random()*.15+.05;this.h=Math.random()>.5?'67,97,238':'114,9,183';}u(){this.x+=this.vx;this.y+=this.vy;if(this.y>H+10)this.r();}d(){cx.save();cx.globalAlpha=this.a;cx.fillStyle=`rgba(${this.h},1)`;cx.beginPath();cx.arc(this.x,this.y,this.rad,0,Math.PI*2);cx.fill();cx.restore();}}
+function init(){ps=[];for(let i=0;i<70;i++)ps.push(new P());}init();
+function loop(){cx.clearRect(0,0,W,H);cx.save();cx.strokeStyle='rgba(67,97,238,0.03)';cx.lineWidth=1;for(let x=0;x<W;x+=60){cx.beginPath();cx.moveTo(x,0);cx.lineTo(x,H);cx.stroke();}for(let y=0;y<H;y+=60){cx.beginPath();cx.moveTo(0,y);cx.lineTo(W,y);cx.stroke();}cx.restore();for(let i=0;i<ps.length;i++)for(let j=i+1;j<ps.length;j++){const dx=ps[i].x-ps[j].x,dy=ps[i].y-ps[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<100){cx.save();cx.globalAlpha=(1-d/100)*.06;cx.strokeStyle='rgba(67,97,238,1)';cx.lineWidth=.5;cx.beginPath();cx.moveTo(ps[i].x,ps[i].y);cx.lineTo(ps[j].x,ps[j].y);cx.stroke();cx.restore();}}ps.forEach(p=>{p.u();p.d();});requestAnimationFrame(loop);}loop();
+
+// ── Data & state ──────────────────────────────────────────────────────────
+let allRecs = [];
+
+function toggleDrop(id) {
+  const wrap = document.getElementById(id);
+  const isOpen = wrap.classList.contains('open');
+  // Close all first
+  document.querySelectorAll('.dl-wrap').forEach(w => w.classList.remove('open'));
+  if (!isOpen) wrap.classList.add('open');
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', e => {
+  if (!e.target.closest('.dl-wrap')) {
+    document.querySelectorAll('.dl-wrap').forEach(w => w.classList.remove('open'));
+  }
+});
+
+async function loadAttendance() {
+  try {
+    const r = await fetch('/api/attendance', { headers: { 'Accept': 'application/json' } });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const json = await r.json();
+    if (!json.success) throw new Error(json.message || 'Failed to load attendance');
+    allRecs = Array.isArray(json.attendance) ? json.attendance : [];
+    applyFilters();
+  } catch(e) {
+    console.error('Attendance load failed:', e);
+    document.getElementById('s-total').textContent   = '0';
+    document.getElementById('s-present').textContent = '0';
+    document.getElementById('s-absent').textContent  = '0';
+    document.getElementById('att-tbody').innerHTML =
+      '<tr class="empty-row"><td colspan="8">Failed to load attendance records.</td></tr>';
+  }
+}
+
+// Apply both search text AND date filter together
+function applyFilters() {
+  const q    = document.getElementById('search-inp').value.trim().toLowerCase();
+  const date = document.getElementById('date-inp').value; // 'YYYY-MM-DD' or ''
+
+  let recs = allRecs;
+
+  // Date filter
+  if (date) {
+    recs = recs.filter(r => (r['date'] || '') === date);
+  }
+
+  // Search filter
+  if (q) {
+    recs = recs.filter(r =>
+      (r['first_name']  || '').toLowerCase().includes(q) ||
+      (r['last_name']   || '').toLowerCase().includes(q) ||
+      (r['reg_number']  || '').toLowerCase().includes(q) ||
+      (r['date']        || '').includes(q)
+    );
+  }
+
+  // Always sort alphabetically by first name
+  recs = [...recs].sort((a, b) =>
+    (a['first_name'] || '').toLowerCase().localeCompare((b['first_name'] || '').toLowerCase())
+  );
+
+  renderTable(recs);
+}
+
+function clearDateFilter() {
+  document.getElementById('date-inp').value = '';
+  applyFilters();
+}
+
+function setToday() {
+  document.getElementById('date-inp').value = new Date().toISOString().slice(0, 10);
+  applyFilters();
+}
+
+function renderTable(recs) {
+  document.getElementById('s-total').textContent   = recs.length;
+  document.getElementById('s-present').textContent = recs.filter(r => r['status'] === 'Present').length;
+  document.getElementById('s-absent').textContent  = recs.filter(r => r['status'] === 'Absent').length;
+
+  const tb = document.getElementById('att-tbody');
+  if (!recs.length) {
+    tb.innerHTML = '<tr class="empty-row"><td colspan="7">No records found</td></tr>';
+    return;
+  }
+  tb.innerHTML = recs.map((r, i) => {
+    const regn = r['reg_number'] || '';
+    const date = r['date'] || '';
+    return `<tr>
+      <td style="color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:0.74rem;">${String(i+1).padStart(2,'0')}</td>
+      <td style="font-weight:600;">${r['first_name']  || ''}</td>
+      <td style="font-weight:600;">${r['last_name']   || ''}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:var(--accent);">${regn}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--muted);">${date}</td>
+      <td><span class="badge ${(r['status'] || '').toLowerCase()}">${r['status'] || ''}</span></td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:0.77rem;color:var(--muted);">${r['time'] || ''}</td>
+      <td style="white-space:nowrap;">
+        <button class="btn btn-override" onclick="openOverride('${regn}','${r['first_name']||''} ${r['last_name']||''}','${date}','${r['status']||'Present'}')">Override</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Date range export modal ───────────────────────────────────────────────
+let drExportType   = null;  // 'excel' or 'pdf'
+let drStatusFilter = null;  // 'present' or 'absent'
+
+function openDR(exportType, statusFilter) {
+  drExportType   = exportType;
+  drStatusFilter = statusFilter;
+  // Close dropdowns
+  document.querySelectorAll('.dl-wrap').forEach(w => w.classList.remove('open'));
+
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('dr-from').value = '';
+  document.getElementById('dr-to').value   = today;
+  document.getElementById('dr-alert').className = 'dr-alert';
+  const label = statusFilter === 'present' ? 'Present' : statusFilter === 'absent' ? 'Absent' : 'All';
+  document.getElementById('dr-title').textContent = `Export ${label} records`;
+  document.getElementById('dr-sub').textContent = `Choose a date range for the ${exportType.toUpperCase()} export`;
+  document.getElementById('dr-modal').classList.add('open');
+}
+
+function closeDR() {
+  document.getElementById('dr-modal').classList.remove('open');
+  drExportType = drStatusFilter = null;
+}
+
+function confirmDRExport() {
+  const from = document.getElementById('dr-from').value;
+  const to   = document.getElementById('dr-to').value;
+  if (!from || !to) {
+    const al = document.getElementById('dr-alert');
+    al.className = 'dr-alert show';
+    al.textContent = 'Please select both From and To dates.';
+    return;
+  }
+  if (from > to) {
+    const al = document.getElementById('dr-alert');
+    al.className = 'dr-alert show';
+    al.textContent = 'From date must be before To date.';
+    return;
+  }
+  closeDR();
+  if (drExportType === 'excel') downloadExcel(drStatusFilter, from, to);
+  else                          downloadPDF(drStatusFilter, from, to);
+}
+
+document.getElementById('dr-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('dr-modal')) closeDR();
+});
+
+// ── Excel download ─────────────────────────────────────────────────────────
+function downloadExcel(statusFilter = 'all', fromDate = null, toDate = null) {
+  const q    = document.getElementById('search-inp').value.trim().toLowerCase();
+  const date = document.getElementById('date-inp').value;
+
+  let recs = allRecs;
+  // Use date range if provided, else use current date filter
+  if (fromDate && toDate) {
+    recs = recs.filter(r => (r['date']||'') >= fromDate && (r['date']||'') <= toDate);
+  } else if (date) {
+    recs = recs.filter(r => (r['date'] || '') === date);
+  }
+  if (q) recs = recs.filter(r =>
+    (r['first_name'] || '').toLowerCase().includes(q) ||
+    (r['last_name']  || '').toLowerCase().includes(q) ||
+    (r['reg_number'] || '').toLowerCase().includes(q) ||
+    (r['date']       || '').includes(q)
+  );
+  if (statusFilter === 'present') recs = recs.filter(r => r['status'] === 'Present');
+  if (statusFilter === 'absent')  recs = recs.filter(r => r['status'] === 'Absent');
+
+  recs = [...recs].sort((a, b) => {
+    const dd = (a['date']||'').localeCompare(b['date']||'');
+    return dd !== 0 ? dd : (a['first_name']||'').localeCompare(b['first_name']||'');
+  });
+
+  if (!recs.length) { alert('No records to export.'); return; }
+
+  const wsData = [['#', 'First Name', 'Last Name', 'Register Number', 'Date', 'Status', 'Time']];
+  recs.forEach((r, i) => {
+    wsData.push([i+1, r['first_name']||'', r['last_name']||'',
+                 r['reg_number']||'', r['date']||'', r['status']||'', r['time']||'']);
+  });
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  ws['!cols'] = [{wch:5},{wch:16},{wch:16},{wch:18},{wch:14},{wch:10},{wch:12}];
+
+  const datePart   = fromDate && toDate ? `${fromDate}_to_${toDate}` : (date ? date : 'all');
+  const statusPart = statusFilter !== 'all' ? `_${statusFilter}` : '';
+  const fname      = `attendance_${datePart}${statusPart}.xlsx`;
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
+  XLSX.writeFile(wb, fname);
+}
+
+// ── PDF download ──────────────────────────────────────────────────────────
+function downloadPDF(statusFilter = 'all', fromDate = null, toDate = null) {
+  const q    = document.getElementById('search-inp').value.trim().toLowerCase();
+  const date = document.getElementById('date-inp').value;
+  let recs   = allRecs;
+  if (fromDate && toDate) {
+    recs = recs.filter(r => (r['date']||'') >= fromDate && (r['date']||'') <= toDate);
+  } else if (date) {
+    recs = recs.filter(r => (r['date'] || '') === date);
+  }
+  if (q) recs = recs.filter(r =>
+    (r['first_name']||'').toLowerCase().includes(q) ||
+    (r['last_name'] ||'').toLowerCase().includes(q) ||
+    (r['reg_number']||'').toLowerCase().includes(q) ||
+    (r['date']      ||'').includes(q));
+  if (statusFilter === 'present') recs = recs.filter(r => r['status'] === 'Present');
+  if (statusFilter === 'absent')  recs = recs.filter(r => r['status'] === 'Absent');
+
+  recs = [...recs].sort((a, b) => {
+    const dd = (a['date']||'').localeCompare(b['date']||'');
+    return dd !== 0 ? dd : (a['first_name']||'').localeCompare(b['first_name']||'');
+  });
+
+  if (!recs.length) { alert('No records to export.'); return; }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  const statusLabel = statusFilter === 'present' ? 'Present Only' :
+                      statusFilter === 'absent'  ? 'Absent Only'  : 'All Records';
+  const dateLabel   = date ? `Date: ${date}` : 'All Dates';
+
+  doc.setFontSize(18); doc.setFont('helvetica','bold');
+  doc.text('FaceTrack Attendance Report', 14, 18);
+  doc.setFontSize(10); doc.setFont('helvetica','normal');
+  doc.text(`${dateLabel}  |  Filter: ${statusLabel}`, 14, 26);
+  doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 32);
+  doc.text(`Total: ${recs.length}  |  Present: ${recs.filter(r=>r['status']==='Present').length}  |  Absent: ${recs.filter(r=>r['status']==='Absent').length}`, 14, 38);
+
+  doc.autoTable({
+    startY: 44,
+    head: [['#','First Name','Last Name','Reg Number','Date','Status','Time']],
+    body: recs.map((r,i) => [i+1, r['first_name']||'', r['last_name']||'',
+                              r['reg_number']||'', r['date']||'', r['status']||'', r['time']||'']),
+    headStyles: { fillColor: [67,97,238], textColor: 255, fontStyle:'bold', fontSize:9 },
+    bodyStyles: { fontSize: 9 },
+    alternateRowStyles: { fillColor: [245,247,255] },
+    didDrawCell: (data) => {
+      if (data.section === 'body' && data.column.index === 5) {
+        const val = data.cell.raw;
+        if (val === 'Present') doc.setTextColor(4,120,87);
+        else doc.setTextColor(185,28,28);
+      }
+    }
+  });
+
+  const datePart   = date ? date : 'all';
+  const statusPart = statusFilter !== 'all' ? `_${statusFilter}` : '';
+  doc.save(`attendance_${datePart}${statusPart}.pdf`);
+}
+
+// ── Manual override ────────────────────────────────────────────────────────
+let overrideReg = null;
+
+function openOverride(regNum, name, date, currentStatus) {
+  overrideReg = regNum;
+  document.getElementById('override-sub').textContent = `Editing: ${name}`;
+  document.getElementById('ov-date').value   = date || new Date().toISOString().slice(0,10);
+  document.getElementById('ov-status').value = currentStatus || 'Present';
+  document.getElementById('ov-reg').value    = regNum;
+  document.getElementById('override-alert').className = 'modal-alert';
+  document.getElementById('override-modal').classList.add('open');
+}
+
+function closeOverride() {
+  document.getElementById('override-modal').classList.remove('open');
+  overrideReg = null;
+}
+
+async function submitOverride() {
+  const reg    = document.getElementById('ov-reg').value;
+  const date   = document.getElementById('ov-date').value;
+  const status = document.getElementById('ov-status').value;
+  if (!date) { showOverrideAlert('Please select a date.','error'); return; }
+
+  try {
+    const res  = await fetch('/api/attendance/override', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ reg_number: reg, date, status })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showOverrideAlert(data.message, 'success');
+      await loadAttendance();
+      setTimeout(closeOverride, 1500);
+    } else {
+      showOverrideAlert(data.message || 'Error', 'error');
+    }
+  } catch(e) { showOverrideAlert('Server error.', 'error'); }
+}
+
+function showOverrideAlert(msg, type) {
+  const el = document.getElementById('override-alert');
+  el.className = 'modal-alert ' + type + ' show';
+  el.textContent = msg;
+}
+
+// Close modal on background click
+document.getElementById('override-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('override-modal')) closeOverride();
+});
+
+// ── Clear all records ──────────────────────────────────────────────────────
+async function clearAll() {
+  if (!confirm('Clear ALL attendance records? This cannot be undone.')) return;
+  await fetch('/api/attendance/clear', { method: 'POST' });
+  loadAttendance();
+}
+
+loadAttendance();
+</script>
+</body>
+</html>

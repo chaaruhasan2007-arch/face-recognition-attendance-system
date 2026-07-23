@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FaceTrack — Register Face</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#f0f4ff; --surface:#ffffff; --surface2:#f7f9ff;
+  --accent:#4361ee; --accent2:#7209b7; --accent3:#06d6a0;
+  --danger:#ef4444;
+  --text:#1a1f3c; --muted:#6b7280; --border:rgba(67,97,238,0.14);
+  --shadow:0 4px 20px rgba(67,97,238,0.09);
+  --glow:0 0 20px rgba(67,97,238,0.35),0 6px 24px rgba(67,97,238,0.15);
+  --glow-green:0 0 20px rgba(6,214,160,0.4);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+
+/* Full-viewport, no scroll */
+html,body{
+  height:100vh;overflow:hidden;
+  background:var(--bg);color:var(--text);
+  font-family:'Outfit',sans-serif;cursor:default;
+}
+#bg-canvas{position:fixed;inset:0;z-index:0;}
+
+/* ── TOPBAR ── */
+.topbar{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 40px;
+  border-bottom:1px solid var(--border);
+  backdrop-filter:blur(20px);
+  background:rgba(240,244,255,0.9);
+  height:56px;
+}
+.logo{font-family:'JetBrains Mono',monospace;font-size:0.95rem;font-weight:600;color:var(--accent);text-decoration:none;}
+.logo span{color:var(--accent2);}
+.nav-r{display:flex;align-items:center;gap:10px;}
+.back-btn{display:flex;align-items:center;gap:6px;font-size:0.8rem;font-weight:600;color:var(--muted);text-decoration:none;padding:6px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface);transition:all 0.2s;}
+.back-btn:hover{color:var(--accent);border-color:rgba(67,97,238,0.3);}
+.sys-pill{display:flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--accent3);background:rgba(6,214,160,0.08);border:1px solid rgba(6,214,160,0.25);padding:5px 12px;border-radius:100px;}
+.s-dot{width:6px;height:6px;background:var(--accent3);border-radius:50%;animation:pulse 1.8s infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(6,214,160,0.5);}50%{box-shadow:0 0 0 5px rgba(6,214,160,0);}}
+
+/* ── MAIN WRAPPER ── fills remaining height under topbar ── */
+.wrapper{
+  position:relative;z-index:10;
+  height:calc(100vh - 56px);
+  margin-top:56px;
+  display:flex;
+  flex-direction:column;
+  padding:16px 40px 12px;
+  gap:12px;
+}
+
+/* ── PAGE HEADER (compact) ── */
+.page-head{
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.head-left{}
+.breadcrumb{font-size:0.72rem;color:var(--muted);display:flex;align-items:center;gap:5px;margin-bottom:3px;}
+.breadcrumb a{color:var(--accent);text-decoration:none;}
+.page-title{font-size:1.4rem;font-weight:800;color:var(--text);letter-spacing:-0.4px;}
+
+/* ── STEP INDICATOR (compact) ── */
+.steps{display:flex;align-items:center;gap:0;}
+.step{display:flex;align-items:center;gap:7px;}
+.step-num{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:0.7rem;font-weight:600;border:2px solid var(--border);background:var(--surface);color:var(--muted);flex-shrink:0;transition:all 0.3s;}
+.step-label{font-size:0.72rem;font-weight:600;color:var(--muted);transition:color 0.3s;white-space:nowrap;}
+.step-line{width:40px;height:2px;background:var(--border);margin:0 6px;transition:background 0.3s;flex-shrink:0;}
+.step.active .step-num{background:var(--accent);border-color:var(--accent);color:#fff;}
+.step.active .step-label{color:var(--accent);}
+.step.done .step-num{background:var(--accent3);border-color:var(--accent3);color:#fff;}
+.step.done .step-label{color:var(--accent3);}
+.step-line.done{background:var(--accent3);}
+
+/* ── TWO-COLUMN CONTENT ── fills remaining space ── */
+.content{
+  flex:1;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  min-height:0; /* allow flex child to shrink */
+}
+
+/* ── CARD ── */
+.card{
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:16px;padding:20px 24px;
+  box-shadow:var(--shadow);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+.card-head{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.card-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.card-htitle{font-size:0.92rem;font-weight:700;color:var(--text);}
+.card-hsub{font-size:0.72rem;color:var(--muted);margin-top:1px;}
+
+/* ── FORM ── */
+.form-body{flex:1;display:flex;flex-direction:column;gap:0;overflow-y:auto;}
+.form-group{margin-bottom:12px;}
+.form-group:last-of-type{margin-bottom:0;}
+.form-label{display:block;font-size:0.7rem;font-weight:700;letter-spacing:0.8px;color:var(--text);margin-bottom:5px;text-transform:uppercase;}
+.form-input{
+  width:100%;padding:10px 14px;
+  background:var(--surface2);border:1.5px solid var(--border);
+  border-radius:9px;color:var(--text);
+  font-family:'Outfit',sans-serif;font-size:0.9rem;
+  outline:none;transition:border-color 0.2s,box-shadow 0.2s;
+}
+.form-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(67,97,238,0.1);}
+.form-input::placeholder{color:#b0b9d0;}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;font-family:'Outfit',sans-serif;font-size:0.85rem;font-weight:700;border:none;border-radius:9px;cursor:pointer;transition:all 0.25s cubic-bezier(0.23,1,0.32,1);}
+.btn-primary{background:var(--accent);color:#fff;justify-content:center;width:100%;margin-top:14px;}
+.btn-primary:hover{background:#3451d1;box-shadow:var(--glow);transform:translateY(-2px);}
+.btn-primary:disabled{opacity:0.38;transform:none;cursor:not-allowed;box-shadow:none;}
+.btn-green{background:var(--accent3);color:#fff;justify-content:center;width:100%;}
+.btn-green:hover{filter:brightness(1.05);box-shadow:var(--glow-green);transform:translateY(-2px);}
+.btn-green:disabled{opacity:0.38;transform:none;cursor:not-allowed;box-shadow:none;}
+.btn-outline{background:transparent;color:var(--accent);border:1.5px solid rgba(67,97,238,0.3);}
+.btn-outline:hover{background:rgba(67,97,238,0.06);border-color:var(--accent);transform:translateY(-2px);}
+.btn-red{background:transparent;color:var(--danger);border:1.5px solid rgba(239,68,68,0.3);}
+.btn-red:hover{background:rgba(239,68,68,0.06);border-color:var(--danger);transform:translateY(-2px);}
+.btn-sm{padding:8px 16px;font-size:0.78rem;}
+
+/* ── ALERT ── */
+.alert{display:none;padding:10px 14px;border-radius:9px;font-size:0.82rem;font-weight:500;align-items:center;gap:8px;margin-top:10px;flex-shrink:0;}
+.alert.show{display:flex;}
+.alert.success{background:rgba(6,214,160,0.1);border:1px solid rgba(6,214,160,0.3);color:#047857;}
+.alert.error{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);color:#b91c1c;}
+.alert.info{background:rgba(67,97,238,0.08);border:1px solid rgba(67,97,238,0.25);color:var(--accent);}
+
+/* ── LEFT COLUMN (form + register btn) ── */
+.left-col{display:flex;flex-direction:column;gap:12px;min-height:0;}
+
+/* Register step card at bottom of left */
+.reg-card{background:var(--surface);border:1.5px solid var(--border);border-radius:16px;padding:16px 20px;box-shadow:var(--shadow);flex-shrink:0;}
+.reg-card-head{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.reg-card-icon{width:32px;height:32px;border-radius:8px;background:rgba(6,214,160,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.reg-card-title{font-size:0.88rem;font-weight:700;color:var(--text);}
+.reg-card-sub{font-size:0.72rem;color:var(--muted);margin-top:1px;}
+
+/* ── RIGHT COLUMN (camera) ── */
+.right-col{display:flex;flex-direction:column;gap:0;min-height:0;}
+.cam-card{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+
+/* Camera preview box — fills available space */
+.cam-wrap{
+  position:relative;flex:1;
+  background:#0d0d1a;border-radius:12px;
+  margin-bottom:12px;
+  overflow:hidden;
+}
+
+.cam-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(13,13,26,0.4);border:2px dashed rgba(6,214,160,0.3);border-radius:10px;color:#06d6a0;font-size:0.88rem;z-index:5;transition:opacity 0.3s;}
+.cam-overlay.hidden{opacity:0;pointer-events:none;}
+
+#cam-feed{width:100%;height:100%;object-fit:cover;border-radius:12px;}
+
+.scan-line{position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--accent3),transparent);animation:none;z-index:6;}
+.scan-line.on{animation:scan 1.5s ease-in-out infinite;}
+@keyframes scan{0%{top:0;}100%{top:100%;}}
+
+#flash{position:absolute;inset:0;background:#fff;opacity:0;border-radius:12px;pointer-events:none;transition:opacity 0.1s;}
+
+/* Captured image */
+#captured-wrap{display:none;flex:1;background:#0d0d1a;border-radius:12px;overflow:hidden;position:relative;}
+#captured-img{width:100%;height:100%;object-fit:cover;border-radius:12px;}
+
+#liveness-status{display:none;padding:8px 12px;border-radius:8px;font-size:0.75rem;font-weight:600;margin-top:10px;}
+
+/* Buttons area */
+.btn-area{display:flex;gap:8px;flex-shrink:0;}
+.btn-area .btn{flex:1;margin-top:0;font-size:0.8rem;padding:10px 8px;}
+
+.btn-reset{background:transparent;color:var(--danger);border:1.5px solid rgba(239,68,68,0.3);justify-content:center;width:100%;margin-top:8px;}
+.btn-reset:hover{background:rgba(239,68,68,0.06);border-color:var(--danger);transform:translateY(-2px);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+</style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+
+<nav class="topbar">
+  <div style="display:flex;align-items:center;gap:8px;">
+    <div class="logo">Face<span>Track</span></div>
+    <span style="font-size:0.65rem;color:var(--muted);letter-spacing:1px;">REGISTER FACE</span>
+  </div>
+  <div class="nav-r">
+    <div class="sys-pill"><div class="s-dot"></div>LIVE</div>
+    <a href="/menu" class="back-btn">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      Back
+    </a>
+  </div>
+</nav>
+
+<div class="wrapper">
+  <div class="page-head">
+    <div class="head-left">
+      <div class="breadcrumb"><a href="/menu">Teacher Menu</a><span>/</span><span>Register Student</span></div>
+      <div class="page-title">Register New Student</div>
+    </div>
+    <div class="steps">
+      <div class="step active" id="step-1"><div class="step-num">1</div><div class="step-label">Capture</div></div>
+      <div class="step-line" id="line-1"></div>
+      <div class="step" id="step-2"><div class="step-num">2</div><div class="step-label">Details</div></div>
+      <div class="step-line" id="line-2"></div>
+      <div class="step" id="step-3"><div class="step-num">3</div><div class="step-label">Register</div></div>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- LEFT: FORM -->
+    <div class="left-col">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon" style="background:rgba(67,97,238,0.1);">📝</div>
+          <div>
+            <div class="card-htitle">Student Details</div>
+            <div class="card-hsub">Complete all fields</div>
+          </div>
+        </div>
+        <div class="form-body">
+          <div class="form-group">
+            <label class="form-label">First Name</label>
+            <input class="form-input" id="r-first" type="text" placeholder="First name" oninput="checkStep2()"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Last Name</label>
+            <input class="form-input" id="r-last" type="text" placeholder="Last name" oninput="checkStep2()"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Register Number</label>
+            <input class="form-input" id="r-regno" type="text" placeholder="e.g. 22CS001" oninput="checkStep2()"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">📧 Email Address <span style="color:var(--danger);">*NEW</span></label>
+            <input class="form-input" id="r-email" type="email" placeholder="student@example.com" oninput="checkStep2()"/>
+          </div>
+        </div>
+      </div>
+
+      <div class="reg-card">
+        <div class="reg-card-head">
+          <div class="reg-card-icon">✅</div>
+          <div>
+            <div class="reg-card-title" id="step3-title">Step 3: Register</div>
+            <div class="reg-card-sub" id="step3-sub">Complete steps 1 & 2 first</div>
+          </div>
+        </div>
+        <button class="btn btn-green" id="btn-register" onclick="registerStudent()" disabled style="margin:0;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+          Register Student
+        </button>
+        <button class="btn btn-reset" id="btn-reset" onclick="resetForm()" style="margin-top:16px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          Reset
+        </button>
+        <div class="alert" id="reg-alert"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: CAMERA -->
+    <div class="right-col">
+      <div class="cam-card">
+        <div class="cam-wrap" id="cam-wrap">
+          <video id="cam-feed" playsinline autoplay muted style="display:none;"></video>
+          <canvas id="reg-canvas" style="display:none;"></canvas>
+          <div id="flash"></div>
+          <div id="cam-overlay" class="cam-overlay">Position face in frame</div>
+          <div id="scan-line" class="scan-line"></div>
+        </div>
+        <div id="captured-wrap">
+          <img id="captured-img"/>
+        </div>
+        <div id="liveness-status"></div>
+        <div class="btn-area">
+          <button class="btn btn-outline" id="btn-start-cam" onclick="startCamera()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+            Start Cam
+          </button>
+          <button class="btn btn-primary" id="btn-capture" onclick="capturePhoto()" disabled style="display:none;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="4"/><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/></svg>
+            Capture Photo
+          </button>
+          <button class="btn btn-outline" id="btn-stop-cam" onclick="stopCamera()" style="display:none;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/></svg>
+            Stop
+          </button>
+          <button class="btn btn-outline" id="btn-retake" onclick="retake()" style="display:none;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            Retake
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const cv=document.getElementById('bg-canvas'),cx=cv.getContext('2d');
+let W,H,ps=[];
+function rsz(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}
+window.addEventListener('resize',()=>{rsz();init();});rsz();
+class P{constructor(){this.r(true);}r(i=false){this.x=Math.random()*W;this.y=i?Math.random()*H:-10;this.vx=(Math.random()-.5)*.25;this.vy=Math.random()*.3+.05;this.rad=Math.random()*1.8+.4;this.a=Math.random()*.12+.04;this.h=Math.random()>.5?'67,97,238':'114,9,183';}u(){this.x+=this.vx;this.y+=this.vy;if(this.y>H+10)this.r();}d(){cx.save();cx.globalAlpha=this.a;cx.fillStyle=`rgba(${this.h},1)`;cx.beginPath();cx.arc(this.x,this.y,this.rad,0,Math.PI*2);cx.fill();cx.restore();}}
+function init(){ps=[];for(let i=0;i<50;i++)ps.push(new P());}init();
+function loop(){cx.clearRect(0,0,W,H);ps.forEach(p=>{p.u();p.d();});requestAnimationFrame(loop);}loop();
+
+let stream=null,capturedImageData=null;
+const vid=document.getElementById('cam-feed'),regCanvas=document.getElementById('reg-canvas');
+
+function setStep(n){
+  for(let i=1;i<=3;i++){
+    const s=document.getElementById(`step-${i}`);
+    const l=document.getElementById(`line-${i}`);
+    if(i<n){s.className='step done';if(l)l.className='step-line done';}
+    else if(i===n){s.className='step active';if(l)l.className='step-line';}
+    else{s.className='step';if(l)l.className='step-line';}
+  }
+}
+
+function checkStep1(){
+  const hasCam=stream!==null;
+  if(hasCam){
+    setStep(1);
+    document.getElementById('btn-capture').disabled=false;
+  }
+}
+
+function checkStep2(){
+  const f=document.getElementById('r-first').value.trim(),l=document.getElementById('r-last').value.trim(),r=document.getElementById('r-regno').value.trim(),e=document.getElementById('r-email').value.trim();
+  if(f&&l&&r&&e&&capturedImageData){
+    document.getElementById('btn-register').disabled=false;
+    document.getElementById('step3-sub').textContent='Ready — click Register Student';
+    setStep(3);
+  }else if(f&&l&&r&&e){
+    setStep(2);
+  }
+}
+
+async function startCamera(){
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:480}}});
+    vid.srcObject=stream;
+    vid.style.display='block';
+    document.getElementById('cam-overlay').classList.add('hidden');
+    document.getElementById('scan-line').classList.add('on');
+    document.getElementById('btn-start-cam').style.display='none';
+    document.getElementById('btn-capture').style.display='inline-flex';
+    document.getElementById('btn-stop-cam').style.display='inline-flex';
+    document.getElementById('btn-capture').disabled=false;
+    checkStep1();
+    showAlert('reg-alert','Camera active. Position your face and click Capture.','info');
+    setStep(1);
+  }catch(e){showAlert('reg-alert','Cannot access camera: '+e.message,'error');}
+}
+
+function stopCamera(){
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+  vid.style.display='none';
+  document.getElementById('cam-overlay').classList.remove('hidden');
+  document.getElementById('scan-line').classList.remove('on');
+  document.getElementById('btn-start-cam').style.display='inline-flex';
+  document.getElementById('btn-capture').style.display='none';
+  document.getElementById('btn-stop-cam').style.display='none';
+}
+
+async function capturePhoto(){
+  const capBtn=document.getElementById('btn-capture');
+  capBtn.disabled=true;
+  capBtn.innerHTML=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin 0.8s linear"><circle cx="12" cy="12" r="10"/><path d="M12 6v6m0 0v6M6 12h6m0 0h6"/></svg> Analyzing…`;
+  
+  regCanvas.width=vid.videoWidth;
+  regCanvas.height=vid.videoHeight;
+  regCanvas.getContext('2d').drawImage(vid,0,0);
+  const liveFrame1=regCanvas.toDataURL('image/jpeg',0.85);
+
+  showAlert('reg-alert','😉 Please blink once for liveness check…','info');
+
+  await new Promise(r => setTimeout(r, 800));
+  if(!stream){capBtn.disabled=false;capBtn.innerHTML='Capture Photo';return;}
+
+  regCanvas.getContext('2d').drawImage(vid,0,0);
+  const liveFrame2=regCanvas.toDataURL('image/jpeg',0.85);
+
+  try{
+    const res=await fetch('/api/liveness',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({frame1:liveFrame1,frame2:liveFrame2})});
+    const data=await res.json();
+    const livStat=document.getElementById('liveness-status');
+
+    if(!data.live){
+      livStat.style.display='block';
+      livStat.style.background='rgba(239,68,68,0.1)';
+      livStat.style.color='#b91c1c';
+      livStat.style.border='1px solid rgba(239,68,68,0.3)';
+      livStat.textContent='⚠️ ' + (data.message || 'Liveness failed. Please blink.');
+      capBtn.disabled=false;
+      capBtn.innerHTML=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="4"/><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/></svg> Retry Capture`;
+      document.getElementById('reg-alert').className='alert';
+      return;
+    }
+    livStat.style.display='block';
+    livStat.style.background='rgba(6,214,160,0.1)';
+    livStat.style.color='#047857';
+    livStat.style.border='1px solid rgba(6,214,160,0.3)';
+    livStat.textContent='✅ Liveness confirmed!';
+  }catch(e){
+    document.getElementById('liveness-status').style.display='none';
+  }
+
+  regCanvas.getContext('2d').drawImage(vid,0,0);
+  capturedImageData=regCanvas.toDataURL('image/jpeg',0.92);
+
+  const flash=document.getElementById('flash');
+  flash.style.opacity='1';
+  setTimeout(()=>flash.style.opacity='0',100);
+
+  document.getElementById('captured-img').src=capturedImageData;
+  document.getElementById('cam-wrap').style.display='none';
+  document.getElementById('captured-wrap').style.display='block';
+  capBtn.style.display='none';
+  document.getElementById('btn-retake').style.display='inline-flex';
+  document.getElementById('btn-stop-cam').style.display='none';
+
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+
+  const ok=document.getElementById('r-first').value.trim()&&
+           document.getElementById('r-last').value.trim()&&
+           document.getElementById('r-regno').value.trim()&&
+           document.getElementById('r-email').value.trim();
+  if(ok){
+    document.getElementById('btn-register').disabled=false;
+    document.getElementById('step3-sub').textContent='Ready — click Register Student';
+    setStep(3);
+  }else{
+    showAlert('reg-alert','Photo captured! Now fill in student details.','info');
+    setStep(2);
+  }
+}
+
+function retake(){
+  capturedImageData=null;
+  document.getElementById('captured-wrap').style.display='none';
+  document.getElementById('cam-wrap').style.display='block';
+  document.getElementById('btn-capture').style.display='inline-flex';
+  document.getElementById('btn-capture').disabled=true;
+  document.getElementById('btn-retake').style.display='none';
+  document.getElementById('btn-start-cam').style.display='inline-flex';
+  document.getElementById('btn-stop-cam').style.display='none';
+  document.getElementById('btn-register').disabled=true;
+  document.getElementById('step3-sub').textContent='Complete steps 1 & 2 first';
+  document.getElementById('cam-overlay').classList.remove('hidden');
+  document.getElementById('scan-line').classList.remove('on');
+  document.getElementById('reg-alert').className='alert';
+  document.getElementById('liveness-status').style.display='none';
+  document.getElementById('btn-capture').innerHTML=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="4"/><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/></svg> Capture Photo`;
+  checkStep1();
+}
+
+function resetForm(){
+  // Stop camera if running
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+  // Clear form inputs
+  document.getElementById('r-first').value='';
+  document.getElementById('r-last').value='';
+  document.getElementById('r-regno').value='';
+  document.getElementById('r-email').value='';
+  // Reset captured state
+  capturedImageData=null;
+  // Reset camera UI
+  document.getElementById('captured-wrap').style.display='none';
+  document.getElementById('cam-wrap').style.display='block';
+  document.getElementById('cam-overlay').classList.remove('hidden');
+  document.getElementById('scan-line').classList.remove('on');
+  // Reset button visibility
+  document.getElementById('btn-start-cam').style.display='inline-flex';
+  document.getElementById('btn-capture').style.display='none';
+  document.getElementById('btn-capture').disabled=true;
+  document.getElementById('btn-capture').innerHTML=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="4"/><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/></svg> Capture Photo`;
+  document.getElementById('btn-stop-cam').style.display='none';
+  document.getElementById('btn-retake').style.display='none';
+  // Reset register button and step indicators
+  document.getElementById('btn-register').disabled=true;
+  document.getElementById('btn-register').innerHTML=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg> Register Student`;
+  document.getElementById('step3-sub').textContent='Complete steps 1 & 2 first';
+  document.getElementById('liveness-status').style.display='none';
+  document.getElementById('reg-alert').className='alert';
+  setStep(1);
+}
+
+async function registerStudent(){
+  const first=document.getElementById('r-first').value.trim();
+  const last=document.getElementById('r-last').value.trim();
+  const regno=document.getElementById('r-regno').value.trim();
+  const email=document.getElementById('r-email').value.trim();
+  
+  if(!first||!last||!regno||!email){showAlert('reg-alert','Please fill in all fields.','error');return;}
+  if(!capturedImageData){showAlert('reg-alert','Please capture a photo first.','error');return;}
+
+  const btn=document.getElementById('btn-register');
+  btn.disabled=true;
+  btn.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin 1s linear infinite"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Registering…`;
+
+  try{
+    const res=await fetch('/api/register',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({first_name:first,last_name:last,reg_number:regno,email:email,image:capturedImageData})
+    });
+    const data=await res.json();
+    showAlert('reg-alert',data.message,data.success?'success':'error');
+
+    if(data.success){
+      document.getElementById('r-first').value='';
+      document.getElementById('r-last').value='';
+      document.getElementById('r-regno').value='';
+      document.getElementById('r-email').value='';
+      capturedImageData=null;
+      document.getElementById('captured-wrap').style.display='none';
+      document.getElementById('cam-wrap').style.display='block';
+      document.getElementById('btn-capture').style.display='inline-flex';
+      document.getElementById('btn-capture').disabled=true;
+      document.getElementById('btn-retake').style.display='none';
+      document.getElementById('btn-start-cam').style.display='inline-flex';
+      document.getElementById('btn-stop-cam').style.display='none';
+      document.getElementById('cam-overlay').classList.remove('hidden');
+      document.getElementById('scan-line').classList.remove('on');
+      document.getElementById('step3-sub').textContent='Complete steps 1 & 2 first';
+      setStep(1);
+    }
+  }catch(e){showAlert('reg-alert','Server error — is Flask running?','error');}
+
+  btn.disabled=false;
+  btn.innerHTML=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg> Register Student`;
+}
+
+function showAlert(id,msg,type){
+  const el=document.getElementById(id);
+  el.className='alert '+type+' show';
+  const icons={
+    success:'<polyline points="20 6 9 17 4 12"/>',
+    error:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',
+    info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'
+  };
+  el.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">${icons[type]||icons.info}</svg> ${msg}`;
+  if(type==='success') setTimeout(()=>el.className='alert',5000);
+}
+
+const s=document.createElement('style');
+s.textContent='@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}';
+document.head.appendChild(s);
+</script>
+</body>
+</html>

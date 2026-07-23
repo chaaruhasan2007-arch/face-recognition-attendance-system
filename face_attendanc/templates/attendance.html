@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FaceTrack — Take Attendance</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#f0f4ff; --surface:#ffffff; --surface2:#f7f9ff;
+  --accent:#4361ee; --accent2:#7209b7; --accent3:#06d6a0;
+  --danger:#ef4444;
+  --text:#1a1f3c; --muted:#6b7280; --border:rgba(67,97,238,0.14);
+  --shadow:0 4px 24px rgba(67,97,238,0.1);
+  --glow-green:0 0 20px rgba(6,214,160,0.4);
+  --glow-red:0 0 20px rgba(239,68,68,0.35);
+  --glow:0 0 18px rgba(67,97,238,0.35);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{min-height:100vh;background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;cursor:default;}
+#bg-canvas{position:fixed;inset:0;z-index:0;}
+
+/* TOPBAR */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:16px 48px;border-bottom:1px solid var(--border);backdrop-filter:blur(20px);background:rgba(240,244,255,0.9);}
+.logo{display:inline-flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:1.05rem;font-weight:700;text-decoration:none;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.logo svg{flex-shrink:0;}
+.logo span{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.nav-actions{display:flex;align-items:center;gap:12px;}
+.back-btn{display:flex;align-items:center;gap:7px;font-size:0.82rem;font-weight:600;color:var(--muted);text-decoration:none;padding:7px 16px;border:1px solid var(--border);border-radius:8px;background:var(--surface);transition:all 0.2s;}
+.back-btn:hover{color:var(--accent);border-color:rgba(67,97,238,0.3);}
+.status-pill{display:flex;align-items:center;gap:7px;font-family:'JetBrains Mono',monospace;font-size:0.65rem;padding:6px 14px;border-radius:100px;transition:all 0.3s;}
+.status-pill.offline{color:var(--muted);background:rgba(107,114,128,0.08);border:1px solid rgba(107,114,128,0.2);}
+.status-pill.live{color:var(--danger);background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);}
+.s-dot{width:6px;height:6px;border-radius:50%;}
+.status-pill.offline .s-dot{background:var(--muted);}
+.status-pill.live .s-dot{background:var(--danger);animation:blink 1s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.25;}}
+
+/* PAGE */
+.page{position:relative;z-index:10;min-height:100vh;padding:96px 48px 60px;}
+.breadcrumb{font-size:0.75rem;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.breadcrumb a{color:var(--accent);text-decoration:none;}
+.page-title{font-size:1.9rem;font-weight:800;color:var(--text);letter-spacing:-0.5px;margin-bottom:4px;}
+.page-sub{font-size:0.88rem;color:var(--muted);margin-bottom:28px;}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start;max-width:960px;}
+
+/* FEED CARD */
+.feed-card{background:var(--surface);border:1.5px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:var(--shadow);}
+.feed-hdr{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--border);}
+.feed-title{font-size:0.95rem;font-weight:700;color:var(--text);}
+.feed-meta{font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted);}
+
+/* CAMERA AREA — smaller */
+.cam-area{position:relative;width:100%;aspect-ratio:16/10;background:#0d0d1a;overflow:hidden;max-height:460px;}
+video#att-video{width:100%;height:100%;object-fit:cover;display:block;transform:scaleX(-1);} /* mirror for natural selfie view */
+canvas#att-canvas{position:absolute;top:0;left:0;width:100%;height:100%;}
+
+/* Placeholder shown before camera starts */
+.cam-ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#0d0d1a;}
+.cam-ph.hidden{display:none;}
+.cam-ph p{font-size:0.75rem;letter-spacing:2px;color:#4b5563;font-family:'JetBrains Mono',monospace;}
+
+/* Processing indicator */
+.processing-bar{height:3px;background:var(--border);overflow:hidden;}
+.processing-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent3));transition:width 0.4s ease;border-radius:3px;}
+.processing-fill.scanning{animation:scan-fill 1.5s ease-in-out infinite;}
+@keyframes scan-fill{0%{width:0%;margin-left:0;}50%{width:60%;margin-left:20%;}100%{width:0%;margin-left:100%;}}
+
+.feed-ftr{display:flex;gap:12px;padding:18px 24px;border-top:1px solid var(--border);align-items:center;}
+.feed-ftr-info{flex:1;font-size:0.78rem;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:9px;padding:12px 24px;font-family:'Outfit',sans-serif;font-size:0.88rem;font-weight:700;border:none;border-radius:10px;cursor:pointer;transition:all 0.25s cubic-bezier(0.23,1,0.32,1);}
+.btn-green{background:var(--accent3);color:#fff;}
+.btn-green:hover{filter:brightness(1.05);box-shadow:var(--glow-green);transform:translateY(-2px);}
+.btn-green:disabled{opacity:0.5;cursor:not-allowed;transform:none;box-shadow:none;}
+.btn-red{background:transparent;color:var(--danger);border:1.5px solid rgba(239,68,68,0.3);}
+.btn-red:hover{background:rgba(239,68,68,0.06);border-color:var(--danger);box-shadow:var(--glow-red);transform:translateY(-2px);}
+.btn-red:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+
+/* SIDEBAR */
+.sidebar{display:flex;flex-direction:column;gap:16px;}
+.info-card{background:var(--surface);border:1.5px solid var(--border);border-radius:16px;padding:22px 24px;box-shadow:var(--shadow);}
+.ic-label{font-size:0.68rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.ic-value{font-family:'JetBrains Mono',monospace;font-size:2rem;font-weight:600;}
+.ic-value.blue{color:var(--accent);}
+.ic-value.purple{color:var(--accent2);}
+.ic-sub{font-size:0.72rem;color:var(--muted);margin-top:4px;}
+
+/* TOAST NOTIFICATIONS */
+#toast-area{position:fixed;top:88px;right:24px;z-index:500;display:flex;flex-direction:column;gap:10px;max-width:300px;}
+.toast{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:12px;font-size:0.85rem;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.12);animation:slideIn 0.3s ease;pointer-events:none;}
+.toast.success{background:#fff;border-left:4px solid var(--accent3);color:#047857;}
+.toast.info{background:#fff;border-left:4px solid var(--accent);color:var(--accent);}
+.toast.warn{background:#fff;border-left:4px solid var(--warn,#f59e0b);color:#92400e;}
+@keyframes slideIn{from{opacity:0;transform:translateX(30px);}to{opacity:1;transform:translateX(0);}}
+
+/* RECENT LIST */
+.recent-wrap{display:flex;flex-direction:column;gap:7px;max-height:220px;overflow-y:auto;margin-top:10px;}
+.rec-item{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;background:rgba(6,214,160,0.05);border-radius:9px;border-left:3px solid var(--accent3);animation:fadeIn 0.3s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.rec-name{font-size:0.88rem;font-weight:600;}
+.rec-time{font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--muted);}
+.rec-empty{font-size:0.75rem;color:var(--muted);letter-spacing:1px;padding:8px 0;}
+
+/* LEGEND */
+.legend{display:flex;flex-direction:column;gap:8px;}
+.leg-row{display:flex;align-items:center;gap:10px;font-size:0.82rem;}
+.leg-box{width:16px;height:16px;border-radius:3px;flex-shrink:0;}
+.leg-box.known{background:rgba(6,214,160,0.25);border:2px solid var(--accent3);}
+.leg-box.unknown{background:rgba(239,68,68,0.15);border:2px solid var(--danger);}
+
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:rgba(67,97,238,0.2);border-radius:4px;}
+
+</style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+
+<div id="toast-area"></div>
+
+<nav class="topbar">
+  <a href="/" class="logo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="url(#lg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#4361ee"/><stop offset="100%" stop-color="#7209b7"/></linearGradient></defs><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>Face<span>Track</span></a>
+  <div class="nav-actions">
+    <a href="/menu" class="back-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      Menu
+    </a>
+    <div class="status-pill offline" id="status-pill">
+      <div class="s-dot"></div>
+      <span id="status-txt">OFFLINE</span>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="breadcrumb"><a href="/">Home</a> <span>›</span> <a href="/menu">Menu</a> <span>›</span> Take Attendance</div>
+  <div class="page-title">Take Attendance</div>
+  <div class="page-sub">Start a session — faces are detected automatically and attendance is marked instantly</div>
+
+  <div class="layout">
+
+    <!-- CAMERA FEED -->
+    <div class="feed-card">
+      <div class="feed-hdr">
+        <div class="feed-title">Live Recognition Feed</div>
+        
+      </div>
+
+      <div class="cam-area">
+        <video id="att-video" autoplay playsinline muted></video>
+        <canvas id="att-canvas"></canvas>
+        <div class="cam-ph" id="cam-ph">
+          <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="1.1"><path d="M23 7 16 12 23 17V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+          <p>START SESSION TO BEGIN</p>
+        </div>
+      </div>
+
+      <div class="processing-bar">
+        <div class="processing-fill" id="proc-fill"></div>
+      </div>
+
+      <div class="feed-ftr">
+        <div class="feed-ftr-info" id="ftr-info">Camera stopped</div>
+        <button class="btn btn-green" id="btn-start" onclick="startSession()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Start Session
+        </button>
+        <button class="btn btn-red" id="btn-stop" onclick="stopSession()" disabled>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="6" y="6" width="12" height="12"/></svg>
+          Stop
+        </button>
+      </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="info-card">
+        <div class="ic-label">Today's Count</div>
+        <div class="ic-value blue" id="today-count">0</div>
+        <div class="ic-sub">Marked present</div>
+      </div>
+      <div class="info-card">
+        <div class="ic-label">Recently Marked</div>
+        <div class="recent-wrap" id="recent-list">
+          <div class="rec-empty">No records yet</div>
+        </div>
+      </div>
+
+      <div class="info-card" style="padding:18px 20px;">
+        <div class="ic-label" style="margin-bottom:12px;">Legend</div>
+        <div class="legend">
+          <div class="leg-row"><div class="leg-box known"></div>Recognized student</div>
+          <div class="leg-row"><div class="leg-box unknown"></div>Unknown face</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── BG Canvas ─────────────────────────────────────────────────────────────
+const bgCanvas=document.getElementById('bg-canvas'),bgCtx=bgCanvas.getContext('2d');
+let BW,BH,bps=[];
+function brsz(){BW=bgCanvas.width=window.innerWidth;BH=bgCanvas.height=window.innerHeight;}
+window.addEventListener('resize',()=>{brsz();binit();});brsz();
+class BP{constructor(){this.r(true);}r(i=false){this.x=Math.random()*BW;this.y=i?Math.random()*BH:-10;this.vx=(Math.random()-.5)*.28;this.vy=Math.random()*.32+.07;this.rad=Math.random()*2+.5;this.a=Math.random()*.15+.05;this.h=Math.random()>.5?'67,97,238':'114,9,183';}u(){this.x+=this.vx;this.y+=this.vy;if(this.y>BH+10)this.r();}d(){bgCtx.save();bgCtx.globalAlpha=this.a;bgCtx.fillStyle=`rgba(${this.h},1)`;bgCtx.beginPath();bgCtx.arc(this.x,this.y,this.rad,0,Math.PI*2);bgCtx.fill();bgCtx.restore();}}
+function binit(){bps=[];for(let i=0;i<70;i++)bps.push(new BP());}binit();
+function blog(){bgCtx.clearRect(0,0,BW,BH);bgCtx.save();bgCtx.strokeStyle='rgba(67,97,238,0.03)';bgCtx.lineWidth=1;for(let x=0;x<BW;x+=60){bgCtx.beginPath();bgCtx.moveTo(x,0);bgCtx.lineTo(x,BH);bgCtx.stroke();}for(let y=0;y<BH;y+=60){bgCtx.beginPath();bgCtx.moveTo(0,y);bgCtx.lineTo(BW,y);bgCtx.stroke();}bgCtx.restore();for(let i=0;i<bps.length;i++)for(let j=i+1;j<bps.length;j++){const dx=bps[i].x-bps[j].x,dy=bps[i].y-bps[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<100){bgCtx.save();bgCtx.globalAlpha=(1-d/100)*.06;bgCtx.strokeStyle='rgba(67,97,238,1)';bgCtx.lineWidth=.5;bgCtx.beginPath();bgCtx.moveTo(bps[i].x,bps[i].y);bgCtx.lineTo(bps[j].x,bps[j].y);bgCtx.stroke();bgCtx.restore();}}bps.forEach(p=>{p.u();p.d();});requestAnimationFrame(blog);}blog();
+
+// ── State ─────────────────────────────────────────────────────────────────
+const vid      = document.getElementById('att-video');
+const canvas   = document.getElementById('att-canvas');
+const ctx      = canvas.getContext('2d');
+const capCanvas= document.createElement('canvas'); // offscreen for frame capture
+
+let stream        = null;
+let sessionActive = false;
+let recognizeLoop = null;
+let markedToday   = new Set();   // reg_numbers already marked this session
+let isProcessing  = false;
+let recentMarked  = [];
+
+// ── Proxy detection state ─────────────────────────────────────────────────
+let audioCtx = null;   // Web Audio context for beep
+
+// ── Session control ───────────────────────────────────────────────────────
+async function startSession() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }
+    });
+    vid.srcObject = stream;
+    await new Promise(r => vid.onloadedmetadata = r);
+    vid.play();
+  } catch(e) {
+    toast('Camera access denied: ' + e.message, 'warn');
+    return;
+  }
+
+  document.getElementById('cam-ph').classList.add('hidden');
+  setLive(true);
+  sessionActive = true;
+
+  // Init AudioContext on user gesture so beep works in all browsers
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') await audioCtx.resume();
+  } catch(e) {}
+
+  // Sync already-marked today from server
+  await syncMarkedToday();
+
+  // Start recognition loop — every 1.5 seconds
+  recognizeLoop = setInterval(processFrame, 1500);
+  document.getElementById('ftr-info').textContent = 'Scanning faces…';
+  document.getElementById('proc-fill').classList.add('scanning');
+}
+
+function stopSession() {
+  sessionActive = false;
+  clearInterval(recognizeLoop);
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  document.getElementById('cam-ph').classList.remove('hidden');
+  setLive(false);
+  document.getElementById('ftr-info').textContent = 'Camera stopped';
+  document.getElementById('proc-fill').classList.remove('scanning');
+  document.getElementById('proc-fill').style.width = '0%';
+  // Reset proxy state
+  consecutiveUnknown = 0;
+  document.getElementById('proxy-warn').classList.remove('show');
+}
+
+function setLive(on) {
+  const pill = document.getElementById('status-pill');
+  const txt  = document.getElementById('status-txt');
+  pill.className = 'status-pill ' + (on ? 'live' : 'offline');
+  txt.textContent = on ? 'LIVE' : 'OFFLINE';
+  document.getElementById('btn-start').disabled = on;
+  document.getElementById('btn-stop').disabled  = !on;
+}
+
+// ── Frame processing ──────────────────────────────────────────────────────
+async function processFrame() {
+  if (!sessionActive || isProcessing || !stream) return;
+  isProcessing = true;
+
+  const vw = vid.videoWidth  || 640;
+  const vh = vid.videoHeight || 480;
+  capCanvas.width  = vw;
+  capCanvas.height = vh;
+
+  // Draw frame MIRRORED — flip horizontally so Flask sees
+  // the same orientation as the CSS-mirrored video the user sees.
+  // This makes face box coordinates directly usable on the canvas overlay.
+  const capCtx = capCanvas.getContext('2d');
+  capCtx.save();
+  capCtx.translate(vw, 0);
+  capCtx.scale(-1, 1);
+  capCtx.drawImage(vid, 0, 0, vw, vh);
+  capCtx.restore();
+  const imageData = capCanvas.toDataURL('image/jpeg', 0.8);
+
+  try {
+    const res  = await fetch('/api/recognize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: imageData })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      drawFaces(data.faces, vw, vh);
+
+      // Auto-mark attendance for each recognised face
+      for (const face of data.faces) {
+        if (face.reg_number && !markedToday.has(face.reg_number)) {
+          markedToday.add(face.reg_number); // optimistic — prevents duplicate calls
+          await markAttendance(face.reg_number, face.name);
+        }
+      }
+    }
+  } catch(e) {
+    // Silent fail — keep looping
+  }
+
+  isProcessing = false;
+}
+
+// ── Draw face boxes on canvas overlay ────────────────────────────────────
+function drawFaces(faces, vw, vh) {
+  const rect = vid.getBoundingClientRect();
+  canvas.width  = rect.width;
+  canvas.height = rect.height;
+
+  const scaleX = rect.width  / vw;
+  const scaleY = rect.height / vh;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // We send a MIRRORED frame to Flask, so Flask coords are already
+  // in display space — use them directly, no X-flipping needed.
+  faces.forEach(face => {
+    const { top, right, bottom, left } = face.box;
+    const isKnown = face.name !== 'Unknown';
+    const color  = isKnown ? '#06d6a0' : '#ef4444';
+    const shadow = isKnown ? 'rgba(6,214,160,0.6)' : 'rgba(239,68,68,0.6)';
+
+    const x = left   * scaleX;
+    const y = top    * scaleY;
+    const w = (right  - left)   * scaleX;
+    const h = (bottom - top)    * scaleY;
+
+    // Box
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth   = 2.5;
+    ctx.shadowColor = shadow;
+    ctx.shadowBlur  = 10;
+    ctx.strokeRect(x, y, w, h);
+    ctx.restore();
+
+    // Corner accents
+    const cs = 14;
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth   = 3.5;
+    ctx.shadowColor = shadow;
+    ctx.shadowBlur  = 6;
+    ctx.beginPath(); ctx.moveTo(x,     y+cs);  ctx.lineTo(x,     y);    ctx.lineTo(x+cs,   y);    ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x+w-cs,y);     ctx.lineTo(x+w,   y);    ctx.lineTo(x+w,    y+cs); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x,     y+h-cs);ctx.lineTo(x,     y+h);  ctx.lineTo(x+cs,   y+h);  ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x+w-cs,y+h);   ctx.lineTo(x+w,   y+h); ctx.lineTo(x+w,    y+h-cs);ctx.stroke();
+    ctx.restore();
+
+    // Name label — draw directly, no scale tricks needed
+    const label = face.name.toUpperCase();
+    ctx.save();
+    ctx.font = 'bold 13px "JetBrains Mono", monospace';
+    const pad = 8;
+    const tw  = ctx.measureText(label).width;
+    const ly  = y > 28 ? y - 6 : y + h + 24;
+
+    ctx.fillStyle   = color;
+    ctx.globalAlpha = 0.92;
+    ctx.shadowColor = shadow;
+    ctx.shadowBlur  = 6;
+    if (ctx.roundRect) ctx.roundRect(x, ly - 20, tw + pad*2, 22, 4);
+    else ctx.rect(x, ly - 20, tw + pad*2, 22);
+    ctx.fill();
+
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur  = 0;
+    ctx.fillStyle   = isKnown ? '#0a1a0a' : '#ffffff';
+    ctx.fillText(label, x + pad, ly - 2);
+    ctx.restore();
+  });
+}
+
+// ── Proxy alert ──────────────────────────────────────────────────────────
+function playBeep() {
+  try {
+    if (!audioCtx) return;
+    [0, 0.3, 0.6].forEach(delay => {
+      const osc  = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.type = 'square';
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.5, audioCtx.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + 0.2);
+      osc.start(audioCtx.currentTime + delay);
+      osc.stop(audioCtx.currentTime + delay + 0.25);
+    });
+  } catch(e) { console.warn('Beep failed:', e); }
+}
+
+async function triggerProxyAlert(count) {
+  // 1. Play beep
+  playBeep();
+
+  // 2. Flash warning banner on camera
+  const warn = document.getElementById('proxy-warn');
+  warn.classList.add('show');
+  setTimeout(() => warn.classList.remove('show'), 3500);
+
+  // 3. Show toast
+  toast('⚠️ Proxy attempt detected! Unknown face ×' + count, 'warn');
+
+  // 4. Log to server
+  try {
+    await fetch('/api/proxy-alert', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ count })
+    });
+  } catch(e) {}
+
+  // 5. Reset after 10s so it can trigger again if attempt continues
+  setTimeout(() => {
+      consecutiveUnknown = 0;
+  }, 10000);
+}
+
+// ── Mark attendance via API ───────────────────────────────────────────────
+async function markAttendance(regNumber, name) {
+  try {
+    const res  = await fetch('/api/mark_attendance', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reg_number: regNumber })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      const now = new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true});
+      toast(`✓ ${name} marked present`, 'success');
+      addRecent(name, now);
+      refreshCount();
+    } else if (data.already_marked) {
+      // Already marked — just update the set silently, no toast
+    }
+  } catch(e) {
+    markedToday.delete(regNumber); // rollback optimistic add on error
+  }
+}
+
+async function syncMarkedToday() {
+  try {
+    const res  = await fetch('/api/attendance-today');
+    const data = await res.json();
+    const recs = data.attendance || [];
+    recs.filter(r => r.status === 'Present').forEach(r => markedToday.add(r.reg_number));
+    document.getElementById('today-count').textContent = markedToday.size;
+    // Populate recent list
+    const presentRecs = recs.filter(r => r.status === 'Present');
+    recentMarked = presentRecs.map(r => ({ name: r.first_name + ' ' + r.last_name, time: r.time }));
+    renderRecentList();
+  } catch(e) {}
+}
+
+function refreshCount() {
+  document.getElementById('today-count').textContent = markedToday.size;
+}
+
+// ── UI helpers ────────────────────────────────────────────────────────────
+function addRecent(name, time) {
+  recentMarked.unshift({ name, time });
+  if (recentMarked.length > 10) recentMarked.pop();
+  renderRecentList();
+}
+
+function renderRecentList() {
+  const list = document.getElementById('recent-list');
+  if (!recentMarked.length) {
+    list.innerHTML = '<div class="rec-empty">No records yet</div>';
+    return;
+  }
+  list.innerHTML = recentMarked.slice(0, 6).map(r =>
+    `<div class="rec-item">
+      <div class="rec-name">${r.name}</div>
+      <div class="rec-time">${r.time}</div>
+    </div>`
+  ).join('');
+}
+
+// ── Load already-marked records on page load ──────────────────────────────
+syncMarkedToday();
+
+function toast(msg, type='success') {
+  const area = document.getElementById('toast-area');
+  const el   = document.createElement('div');
+  el.className = 'toast ' + type;
+  const icons = {
+    success: '<polyline points="20 6 9 17 4 12"/>',
+    info:    '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>',
+    warn:    '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/>'
+  };
+  el.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">${icons[type]||icons.success}</svg> ${msg}`;
+  area.appendChild(el);
+  setTimeout(() => { el.style.opacity='0'; el.style.transform='translateX(30px)'; el.style.transition='all 0.3s'; setTimeout(()=>el.remove(), 300); }, 3000);
+}
+</script>
+</body>
+</html>
